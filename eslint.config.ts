@@ -1,11 +1,12 @@
+import css from "@eslint/css";
 import js from "@eslint/js";
+import json from "@eslint/json";
+import pluginQuery from "@tanstack/eslint-plugin-query";
+import pluginReact from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
-import pluginReact from "eslint-plugin-react";
-import json from "@eslint/json";
-import css from "@eslint/css";
-import { defineConfig } from "eslint/config";
-import reactHooks from "eslint-plugin-react-hooks";
 
 export default defineConfig([
   {
@@ -17,6 +18,7 @@ export default defineConfig([
   // @ts-expect-error https://github.com/eslint/eslint/issues/19570
   tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
+  ...pluginQuery.configs["flat/recommended"],
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
     plugins: { "react-hooks": reactHooks },
