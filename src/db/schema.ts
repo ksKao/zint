@@ -46,6 +46,7 @@ export const transactions = sqliteTable("transactions", {
     .notNull()
     .default(false),
   amount: real("amount").notNull(),
+  balance: real("balance").notNull(),
   categoryId: text("category_id").references(() => categories.id, {
     onDelete: "cascade",
   }),

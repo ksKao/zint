@@ -29,6 +29,7 @@ CREATE TABLE `transactions` (
 	`payee` text,
 	`is_temporary` integer DEFAULT false NOT NULL,
 	`amount` real NOT NULL,
+	`balance` real NOT NULL,
 	`category_id` text,
 	`sub_category_id` text,
 	`account_id` text NOT NULL,
