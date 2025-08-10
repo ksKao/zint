@@ -6,7 +6,11 @@ function App() {
   const { data } = useQuery({
     queryKey: [],
     queryFn: async () => {
-      return await db.query.users.findMany();
+      return await db.query.transactions.findMany({
+        with: {
+          account: true,
+        },
+      });
     },
   });
 
