@@ -1,6 +1,7 @@
 import { Link, LinkComponentProps } from "@tanstack/react-router";
 import { LayoutDashboard, Settings, Shapes, WalletCards } from "lucide-react";
 import { ComponentType } from "react";
+import CommandMenu from "./command-menu";
 
 export default function Navbar() {
   const navItems: {
@@ -32,9 +33,12 @@ export default function Navbar() {
 
   return (
     <nav className="border-border flex flex-col justify-between border-r px-4 py-8">
-      <div className="flex w-full items-center gap-4">
-        <img src="/tauri.svg" alt="logo" className="h-8 w-8" />
-        <h1 className="text-2xl font-bold">Zint</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex w-full items-center gap-4">
+          <img src="/tauri.svg" alt="logo" className="h-8 w-8" />
+          <h1 className="text-2xl font-bold">Zint</h1>
+        </div>
+        <CommandMenu />
       </div>
       <ul className="flex grow flex-col justify-center gap-2">
         {navItems.map((item) => (
