@@ -1,12 +1,44 @@
-import { Link, useParams } from "@tanstack/react-router";
+import {
+  Link,
+  LinkComponentProps,
+  useLocation,
+  useParams,
+} from "@tanstack/react-router";
 import { LayoutDashboard, Settings, Shapes, WalletCards } from "lucide-react";
 import CommandMenu from "./command-menu";
 import { AccountSelector } from "./account-selector";
+import { AnimatedBackground } from "./ui/animated-background";
 
 export default function Navbar() {
   const { accountId } = useParams({ strict: false });
-  const linkClassName =
-    "[&.active]:bg-primary [&.active]:text-primary-foreground flex items-center gap-4 rounded-md p-4 pr-16 [&.active]:font-bold";
+  const { pathname } = useLocation();
+
+  const links: {
+    to: LinkComponentProps["to"];
+    text: string;
+    icon: React.ComponentType;
+  }[] = [
+    {
+      to: "/$accountId",
+      icon: LayoutDashboard,
+      text: "Dashboard",
+    },
+    {
+      to: "/$accountId/transactions",
+      icon: WalletCards,
+      text: "Transactions",
+    },
+    {
+      to: "/$accountId/categories",
+      icon: Shapes,
+      text: "Categories",
+    },
+    {
+      to: "/$accountId/settings",
+      icon: Settings,
+      text: "Settings",
+    },
+  ];
 
   return (
     <nav className="border-border flex w-72 flex-col justify-between border-r px-4 py-8">
@@ -19,48 +51,33 @@ export default function Navbar() {
       </div>
       <ul className="flex grow flex-col justify-center gap-2">
         {accountId ? (
-          <>
-            <li>
-              <Link
-                to="/$accountId"
-                params={{ accountId }}
-                className={linkClassName}
-                activeOptions={{ exact: true }}
-              >
-                <LayoutDashboard /> <span>Dashboard</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/$accountId/transactions"
-                params={{ accountId }}
-                className={linkClassName}
-              >
-                <WalletCards /> <span>Transactions</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/$accountId/categories"
-                params={{ accountId }}
-                className={linkClassName}
-              >
-                <Shapes /> <span>Categories</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/$accountId/settings"
-                params={{ accountId }}
-                className={linkClassName}
-              >
-                <Settings /> <span>Settings</span>
-              </Link>
-            </li>
-          </>
+          <AnimatedBackground
+            value={
+              links.find(
+                (link) => pathname.replace(accountId, "$accountId") === link.to,
+              )?.text
+            }
+            className="bg-primary rounded-md"
+          >
+            {links.map((link) => (
+              <li key={link.text} data-id={link.text}>
+                <Link
+                  to={link.to as "/$accountId"}
+                  params={{ accountId }}
+                  className="[&.active]:text-primary-foreground flex items-center gap-4 p-4 pr-16 [&.active]:font-bold"
+                  activeOptions={{ exact: true }}
+                >
+                  <link.icon /> <span>{link.text}</span>
+                </Link>
+              </li>
+            ))}
+          </AnimatedBackground>
         ) : (
           <li>
-            <Link to="/settings" className={linkClassName}>
+            <Link
+              to="/settings"
+              className="[&.active]:bg-primary [&.active]:text-primary-foreground flex items-center gap-4 rounded-md p-4 pr-16 [&.active]:font-bold"
+            >
               <Settings /> <span>Settings</span>
             </Link>
           </li>
