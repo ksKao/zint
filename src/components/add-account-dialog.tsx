@@ -50,7 +50,7 @@ const formSchema = z.object({
 
 export default function AddAccountDialog() {
   const { open, setOpen } = useAddAccountDialog();
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -74,7 +74,7 @@ export default function AddAccountDialog() {
       toast.success("Account has been created");
       form.reset();
       setOpen(false);
-      queryClient.invalidateQueries({ queryKey: [queryKeys.accounts] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.account] });
       navigate({
         to: "/$accountId",
         params: {

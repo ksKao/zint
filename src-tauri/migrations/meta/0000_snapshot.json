@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "4441533c-5313-48c3-84a5-2598ad8d8a6b",
+  "id": "f3b30029-8141-4383-903d-a4b4755a1797",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "accounts": {
@@ -54,7 +54,7 @@
         },
         "icon": {
           "name": "icon",
-          "type": "blob",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -106,7 +106,7 @@
         },
         "icon": {
           "name": "icon",
-          "type": "blob",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

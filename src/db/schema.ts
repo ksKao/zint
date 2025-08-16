@@ -1,10 +1,4 @@
-import {
-  blob,
-  integer,
-  real,
-  sqliteTable,
-  text,
-} from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
 
@@ -19,7 +13,7 @@ export const accounts = sqliteTable("accounts", {
 export const categories = sqliteTable("categories", {
   id: cuidField,
   name: text("name").notNull(),
-  icon: blob("icon", { mode: "buffer" }),
+  icon: text("icon"),
   accountId: text("account_id")
     .references(() => accounts.id, { onDelete: "cascade" })
     .notNull(),
@@ -28,7 +22,7 @@ export const categories = sqliteTable("categories", {
 export const subCategories = sqliteTable("sub_categories", {
   id: cuidField,
   name: text("name").notNull(),
-  icon: blob("icon", { mode: "buffer" }),
+  icon: text("icon"),
   categoryId: text("category_id")
     .references(() => categories.id, { onDelete: "cascade" })
     .notNull(),

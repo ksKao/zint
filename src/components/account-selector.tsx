@@ -18,7 +18,7 @@ export function AccountSelector() {
   const { navigate } = useRouter();
   const { accountId } = useParams({ strict: false });
   const { data } = useSuspenseQuery({
-    queryKey: [queryKeys.accounts],
+    queryKey: [queryKeys.account],
     queryFn: async () => {
       return await db.select().from(accounts);
     },

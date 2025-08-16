@@ -1,3 +1,4 @@
 export const queryKeys = {
-  accounts: "accounts",
+  account: "account",
+  category: "category",
 } as const;

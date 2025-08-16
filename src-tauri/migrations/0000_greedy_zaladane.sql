@@ -7,7 +7,7 @@ CREATE TABLE `accounts` (
 CREATE TABLE `categories` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
-	`icon` blob,
+	`icon` text,
 	`account_id` text NOT NULL,
 	FOREIGN KEY (`account_id`) REFERENCES `accounts`(`id`) ON UPDATE no action ON DELETE cascade
 );
@@ -15,7 +15,7 @@ CREATE TABLE `categories` (
 CREATE TABLE `sub_categories` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
-	`icon` blob,
+	`icon` text,
 	`category_id` text NOT NULL,
 	`account_id` text NOT NULL,
 	FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE cascade,
