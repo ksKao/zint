@@ -8,15 +8,22 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as TransactionsRouteImport } from './routes/transactions'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as CategoriesRouteImport } from './routes/categories'
-import { Route as IndexRouteImport } from './routes/index'
+import { createFileRoute } from '@tanstack/react-router'
 
-const TransactionsRoute = TransactionsRouteImport.update({
-  id: '/transactions',
-  path: '/transactions',
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountIdLayoutRouteRouteImport } from './routes/$accountId/_layout/route'
+import { Route as AccountIdLayoutIndexRouteImport } from './routes/$accountId/_layout/index'
+import { Route as AccountIdLayoutTransactionsRouteImport } from './routes/$accountId/_layout/transactions'
+import { Route as AccountIdLayoutSettingsRouteImport } from './routes/$accountId/_layout/settings'
+import { Route as AccountIdLayoutCategoriesRouteImport } from './routes/$accountId/_layout/categories'
+
+const AccountIdRouteImport = createFileRoute('/$accountId')()
+
+const AccountIdRoute = AccountIdRouteImport.update({
+  id: '/$accountId',
+  path: '/$accountId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -24,58 +31,109 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CategoriesRoute = CategoriesRouteImport.update({
-  id: '/categories',
-  path: '/categories',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountIdLayoutRouteRoute = AccountIdLayoutRouteRouteImport.update({
+  id: '/_layout',
+  getParentRoute: () => AccountIdRoute,
+} as any)
+const AccountIdLayoutIndexRoute = AccountIdLayoutIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountIdLayoutRouteRoute,
+} as any)
+const AccountIdLayoutTransactionsRoute =
+  AccountIdLayoutTransactionsRouteImport.update({
+    id: '/transactions',
+    path: '/transactions',
+    getParentRoute: () => AccountIdLayoutRouteRoute,
+  } as any)
+const AccountIdLayoutSettingsRoute = AccountIdLayoutSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AccountIdLayoutRouteRoute,
+} as any)
+const AccountIdLayoutCategoriesRoute =
+  AccountIdLayoutCategoriesRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => AccountIdLayoutRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/categories': typeof CategoriesRoute
   '/settings': typeof SettingsRoute
-  '/transactions': typeof TransactionsRoute
+  '/$accountId': typeof AccountIdLayoutRouteRouteWithChildren
+  '/$accountId/categories': typeof AccountIdLayoutCategoriesRoute
+  '/$accountId/settings': typeof AccountIdLayoutSettingsRoute
+  '/$accountId/transactions': typeof AccountIdLayoutTransactionsRoute
+  '/$accountId/': typeof AccountIdLayoutIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/categories': typeof CategoriesRoute
   '/settings': typeof SettingsRoute
-  '/transactions': typeof TransactionsRoute
+  '/$accountId': typeof AccountIdLayoutIndexRoute
+  '/$accountId/categories': typeof AccountIdLayoutCategoriesRoute
+  '/$accountId/settings': typeof AccountIdLayoutSettingsRoute
+  '/$accountId/transactions': typeof AccountIdLayoutTransactionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/categories': typeof CategoriesRoute
   '/settings': typeof SettingsRoute
-  '/transactions': typeof TransactionsRoute
+  '/$accountId': typeof AccountIdRouteWithChildren
+  '/$accountId/_layout': typeof AccountIdLayoutRouteRouteWithChildren
+  '/$accountId/_layout/categories': typeof AccountIdLayoutCategoriesRoute
+  '/$accountId/_layout/settings': typeof AccountIdLayoutSettingsRoute
+  '/$accountId/_layout/transactions': typeof AccountIdLayoutTransactionsRoute
+  '/$accountId/_layout/': typeof AccountIdLayoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/categories' | '/settings' | '/transactions'
+  fullPaths:
+    | '/'
+    | '/settings'
+    | '/$accountId'
+    | '/$accountId/categories'
+    | '/$accountId/settings'
+    | '/$accountId/transactions'
+    | '/$accountId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/categories' | '/settings' | '/transactions'
-  id: '__root__' | '/' | '/categories' | '/settings' | '/transactions'
+  to:
+    | '/'
+    | '/settings'
+    | '/$accountId'
+    | '/$accountId/categories'
+    | '/$accountId/settings'
+    | '/$accountId/transactions'
+  id:
+    | '__root__'
+    | '/'
+    | '/settings'
+    | '/$accountId'
+    | '/$accountId/_layout'
+    | '/$accountId/_layout/categories'
+    | '/$accountId/_layout/settings'
+    | '/$accountId/_layout/transactions'
+    | '/$accountId/_layout/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CategoriesRoute: typeof CategoriesRoute
   SettingsRoute: typeof SettingsRoute
-  TransactionsRoute: typeof TransactionsRoute
+  AccountIdRoute: typeof AccountIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/transactions': {
-      id: '/transactions'
-      path: '/transactions'
-      fullPath: '/transactions'
-      preLoaderRoute: typeof TransactionsRouteImport
+    '/$accountId': {
+      id: '/$accountId'
+      path: '/$accountId'
+      fullPath: '/$accountId'
+      preLoaderRoute: typeof AccountIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -85,13 +143,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/categories': {
-      id: '/categories'
-      path: '/categories'
-      fullPath: '/categories'
-      preLoaderRoute: typeof CategoriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -99,14 +150,77 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$accountId/_layout': {
+      id: '/$accountId/_layout'
+      path: '/$accountId'
+      fullPath: '/$accountId'
+      preLoaderRoute: typeof AccountIdLayoutRouteRouteImport
+      parentRoute: typeof AccountIdRoute
+    }
+    '/$accountId/_layout/': {
+      id: '/$accountId/_layout/'
+      path: '/'
+      fullPath: '/$accountId/'
+      preLoaderRoute: typeof AccountIdLayoutIndexRouteImport
+      parentRoute: typeof AccountIdLayoutRouteRoute
+    }
+    '/$accountId/_layout/transactions': {
+      id: '/$accountId/_layout/transactions'
+      path: '/transactions'
+      fullPath: '/$accountId/transactions'
+      preLoaderRoute: typeof AccountIdLayoutTransactionsRouteImport
+      parentRoute: typeof AccountIdLayoutRouteRoute
+    }
+    '/$accountId/_layout/settings': {
+      id: '/$accountId/_layout/settings'
+      path: '/settings'
+      fullPath: '/$accountId/settings'
+      preLoaderRoute: typeof AccountIdLayoutSettingsRouteImport
+      parentRoute: typeof AccountIdLayoutRouteRoute
+    }
+    '/$accountId/_layout/categories': {
+      id: '/$accountId/_layout/categories'
+      path: '/categories'
+      fullPath: '/$accountId/categories'
+      preLoaderRoute: typeof AccountIdLayoutCategoriesRouteImport
+      parentRoute: typeof AccountIdLayoutRouteRoute
+    }
   }
 }
 
+interface AccountIdLayoutRouteRouteChildren {
+  AccountIdLayoutCategoriesRoute: typeof AccountIdLayoutCategoriesRoute
+  AccountIdLayoutSettingsRoute: typeof AccountIdLayoutSettingsRoute
+  AccountIdLayoutTransactionsRoute: typeof AccountIdLayoutTransactionsRoute
+  AccountIdLayoutIndexRoute: typeof AccountIdLayoutIndexRoute
+}
+
+const AccountIdLayoutRouteRouteChildren: AccountIdLayoutRouteRouteChildren = {
+  AccountIdLayoutCategoriesRoute: AccountIdLayoutCategoriesRoute,
+  AccountIdLayoutSettingsRoute: AccountIdLayoutSettingsRoute,
+  AccountIdLayoutTransactionsRoute: AccountIdLayoutTransactionsRoute,
+  AccountIdLayoutIndexRoute: AccountIdLayoutIndexRoute,
+}
+
+const AccountIdLayoutRouteRouteWithChildren =
+  AccountIdLayoutRouteRoute._addFileChildren(AccountIdLayoutRouteRouteChildren)
+
+interface AccountIdRouteChildren {
+  AccountIdLayoutRouteRoute: typeof AccountIdLayoutRouteRouteWithChildren
+}
+
+const AccountIdRouteChildren: AccountIdRouteChildren = {
+  AccountIdLayoutRouteRoute: AccountIdLayoutRouteRouteWithChildren,
+}
+
+const AccountIdRouteWithChildren = AccountIdRoute._addFileChildren(
+  AccountIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CategoriesRoute: CategoriesRoute,
   SettingsRoute: SettingsRoute,
-  TransactionsRoute: TransactionsRoute,
+  AccountIdRoute: AccountIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

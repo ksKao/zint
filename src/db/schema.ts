@@ -13,6 +13,7 @@ const cuidField = text("id").$defaultFn(createId).primaryKey();
 export const accounts = sqliteTable("accounts", {
   id: cuidField,
   name: text("name").notNull(),
+  currency: text("currency").notNull(),
 });
 
 export const categories = sqliteTable("categories", {
