@@ -9,7 +9,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { useAddAccountDialog } from "./add-account-dialog";
+import { useAddAccountDialog } from "./dialog-forms/add-account-dialog";
 import { db } from "@/db";
 import { accounts } from "@/db/schema";
 

@@ -16,12 +16,15 @@ import { Command } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/providers/theme-provider";
 import { capitalizeWords } from "@/lib/utils";
-import { useAddCategoryDialog } from "./add-category-dialog";
+import { useAddCategoryDialog } from "@/components/dialog-forms/add-category-dialog";
+import { useUpsertTransactionDialog } from "@/components/dialog-forms/upsert-transaction-dialog";
 
 export default function CommandMenu() {
   const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { setOpen: setAddCategoryDialogOpen } = useAddCategoryDialog();
+  const { setOpen: setUpsertTransactionDialogOpen } =
+    useUpsertTransactionDialog();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -41,7 +44,10 @@ export default function CommandMenu() {
   }, []);
 
   const quickActions: { name: string; onSelect: () => void }[] = [
-    { name: "Add Transaction", onSelect: () => {} },
+    {
+      name: "Add Transaction",
+      onSelect: () => setUpsertTransactionDialogOpen(true),
+    },
     { name: "Add Category", onSelect: () => setAddCategoryDialogOpen(true) },
     {
       name: `Switch Theme (Current Theme: ${capitalizeWords(theme)})`,

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "f3b30029-8141-4383-903d-a4b4755a1797",
+  "id": "5175f43c-a7fd-4205-a7a8-415b8fe17aac",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "accounts": {
@@ -219,6 +219,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "category_id": {
           "name": "category_id",
           "type": "text",
@@ -241,7 +248,16 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "transactions_date_order_unique": {
+          "name": "transactions_date_order_unique",
+          "columns": [
+            "date",
+            "order"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "transactions_category_id_categories_id_fk": {
           "name": "transactions_category_id_categories_id_fk",

@@ -1,4 +1,10 @@
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  real,
+  sqliteTable,
+  text,
+  unique,
+} from "drizzle-orm/sqlite-core";
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
 
@@ -31,27 +37,32 @@ export const subCategories = sqliteTable("sub_categories", {
     .notNull(),
 });
 
-export const transactions = sqliteTable("transactions", {
-  id: cuidField,
-  title: text("title").notNull(),
-  description: text("description"),
-  date: integer("date", { mode: "timestamp" }),
-  payee: text("payee"),
-  isTemporary: integer("is_temporary", { mode: "boolean" })
-    .notNull()
-    .default(false),
-  amount: real("amount").notNull(),
-  balance: real("balance").notNull(),
-  categoryId: text("category_id").references(() => categories.id, {
-    onDelete: "cascade",
-  }),
-  subCategoryId: text("sub_category_id").references(() => subCategories.id, {
-    onDelete: "cascade",
-  }),
-  accountId: text("account_id")
-    .references(() => accounts.id, { onDelete: "cascade" })
-    .notNull(),
-});
+export const transactions = sqliteTable(
+  "transactions",
+  {
+    id: cuidField,
+    title: text("title").notNull(),
+    description: text("description"),
+    date: integer("date", { mode: "timestamp" }),
+    payee: text("payee"),
+    isTemporary: integer("is_temporary", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    amount: real("amount").notNull(),
+    balance: real("balance").notNull(),
+    order: integer("order").notNull(),
+    categoryId: text("category_id").references(() => categories.id, {
+      onDelete: "cascade",
+    }),
+    subCategoryId: text("sub_category_id").references(() => subCategories.id, {
+      onDelete: "cascade",
+    }),
+    accountId: text("account_id")
+      .references(() => accounts.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (t) => [unique().on(t.date, t.order)],
+);
 
 export const widgets = sqliteTable("widgets", {
   id: cuidField,

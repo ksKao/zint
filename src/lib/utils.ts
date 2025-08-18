@@ -22,3 +22,10 @@ export function fileToBase64(file: File): Promise<string> {
     reader.onerror = reject;
   });
 }
+
+export function getDateAtMidnight(date: Date = new Date()) {
+  const clone = new Date(date);
+  clone.setHours(0, 0, 0, 0);
+
+  return clone;
+}

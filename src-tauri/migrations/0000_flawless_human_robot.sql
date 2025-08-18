@@ -31,6 +31,7 @@ CREATE TABLE `transactions` (
 	`is_temporary` integer DEFAULT false NOT NULL,
 	`amount` real NOT NULL,
 	`balance` real NOT NULL,
+	`order` integer NOT NULL,
 	`category_id` text,
 	`sub_category_id` text,
 	`account_id` text NOT NULL,
@@ -39,6 +40,7 @@ CREATE TABLE `transactions` (
 	FOREIGN KEY (`account_id`) REFERENCES `accounts`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `transactions_date_order_unique` ON `transactions` (`date`,`order`);--> statement-breakpoint
 CREATE TABLE `widgets` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,

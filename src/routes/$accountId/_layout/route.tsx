@@ -1,4 +1,5 @@
-import AddCategoryDialog from "@/components/add-category-dialog";
+import AddCategoryDialog from "@/components/dialog-forms/add-category-dialog";
+import UpsertTransactionDialog from "@/components/dialog-forms/upsert-transaction-dialog";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/$accountId/_layout")({
@@ -11,6 +12,7 @@ function RouteComponent() {
   return (
     <>
       <AddCategoryDialog accountId={accountId} />
+      <UpsertTransactionDialog accountId={accountId} />
       <Outlet />
     </>
   );
