@@ -17,19 +17,31 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod/v4";
-import { create } from "zustand";
-import { codes } from "currency-codes";
-import { AutoComplete } from "../custom/autocomplete";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useNavigate } from "@tanstack/react-router";
-import { createId } from "@paralleldrive/cuid2";
 import { db } from "@/db";
 import { accounts } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createId } from "@paralleldrive/cuid2";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { codes } from "currency-codes";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useMeasure } from "react-use";
+import { toast } from "sonner";
+import { z } from "zod/v4";
+import { create } from "zustand";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "../ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 type AddAccountDialogState = {
   open: boolean;
@@ -50,6 +62,7 @@ const formSchema = z.object({
 
 export default function AddAccountDialog() {
   const { open, setOpen } = useAddAccountDialog();
+  const [currencySelectorOpen, setCurrencySelectorOpen] = useState(false);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,6 +72,8 @@ export default function AddAccountDialog() {
   });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [currencySelectorRef, { width: currencySelectorWidth }] =
+    useMeasure<HTMLButtonElement>();
   const { mutate: addAccount, isPending } = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
       const cuid = createId();
@@ -118,17 +133,67 @@ export default function AddAccountDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Currency</FormLabel>
-                  <FormControl>
-                    <AutoComplete
-                      emptyMessage="No currency found."
-                      value={{ label: field.value, value: field.value }}
-                      onValueChange={(val) => field.onChange(val.value)}
-                      options={currencyList.map((c) => ({
-                        label: c,
-                        value: c,
-                      }))}
-                    />
-                  </FormControl>
+                  <Popover
+                    modal
+                    open={currencySelectorOpen}
+                    onOpenChange={setCurrencySelectorOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn(
+                            "w-full justify-between",
+                            !field.value && "text-muted-foreground",
+                          )}
+                          ref={currencySelectorRef}
+                        >
+                          {field.value
+                            ? currencyList.find((c) => c === field.value)
+                            : "Select currency"}
+                          <ChevronsUpDown className="opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="p-0"
+                      style={{ width: currencySelectorWidth + 24 }} // 24 for padding
+                    >
+                      <Command>
+                        <CommandInput
+                          placeholder="Search currency..."
+                          className="h-9"
+                          showSearchIcon
+                        />
+                        <CommandList>
+                          <CommandEmpty>No currency found.</CommandEmpty>
+                          <CommandGroup>
+                            {currencyList.map((currency) => (
+                              <CommandItem
+                                value={currency}
+                                key={currency}
+                                onSelect={() => {
+                                  form.setValue("currency", currency);
+                                  setCurrencySelectorOpen(false);
+                                }}
+                              >
+                                {currency}
+                                <Check
+                                  className={cn(
+                                    "ml-auto",
+                                    currency === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

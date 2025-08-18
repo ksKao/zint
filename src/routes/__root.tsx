@@ -8,7 +8,9 @@ export const Route = createRootRoute({
     <div className="flex h-screen w-screen">
       <AddAccountDialog />
       <Navbar />
-      <Outlet />
+      <main className="grow">
+        <Outlet />
+      </main>
       <Toaster richColors position="top-center" />
     </div>
   ),

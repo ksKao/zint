@@ -68,7 +68,7 @@ export default function CommandMenu() {
         </TooltipContent>
       </Tooltip>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Type a command or search" />
+        <CommandInput placeholder="Type a command or search" showSearchIcon />
         <CommandList>
           <CommandEmpty>No results found</CommandEmpty>
           <CommandGroup heading="Quick Actions">

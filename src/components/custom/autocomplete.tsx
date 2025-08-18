@@ -1,22 +1,20 @@
 import {
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Command as CommandPrimitive, CommandInput } from "cmdk";
-import { useCallback, useRef, useState, type KeyboardEvent } from "react";
-
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
-import { Input } from "../ui/input";
+import { Command as CommandPrimitive } from "cmdk";
+import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 
 export type Option = Record<"value" | "label", string> & Record<string, string>;
 
 type AutoCompleteProps = {
   options: Option[];
-  emptyMessage: string;
+  emptyMessage?: string;
   value?: Option;
   onValueChange?: (value: Option) => void;
   isLoading?: boolean;
@@ -27,16 +25,15 @@ type AutoCompleteProps = {
 export const AutoComplete = ({
   options,
   placeholder,
-  emptyMessage,
   value,
   onValueChange,
   disabled,
+  emptyMessage = "",
   isLoading = false,
 }: AutoCompleteProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [isOpen, setOpen] = useState(false);
-  const [selected, setSelected] = useState<Option>(value as Option);
   const [inputValue, setInputValue] = useState<string>(value?.label || "");
 
   const handleKeyDown = useCallback(
@@ -57,7 +54,6 @@ export const AutoComplete = ({
           (option) => option.label === input.value,
         );
         if (optionToSelect) {
-          setSelected(optionToSelect);
           onValueChange?.(optionToSelect);
         }
       }
@@ -71,14 +67,12 @@ export const AutoComplete = ({
 
   const handleBlur = useCallback(() => {
     setOpen(false);
-    setInputValue(selected?.label);
-  }, [selected]);
+  }, []);
 
   const handleSelectOption = useCallback(
     (selectedOption: Option) => {
       setInputValue(selectedOption.label);
 
-      setSelected(selectedOption);
       onValueChange?.(selectedOption);
 
       // This is a hack to prevent the input from being focused after the user selects an option
@@ -101,6 +95,7 @@ export const AutoComplete = ({
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
           disabled={disabled}
+          containerClassName="p-0"
           asChild
         >
           <Input />
@@ -113,19 +108,18 @@ export const AutoComplete = ({
             isOpen ? "block" : "hidden",
           )}
         >
-          <CommandList className="rounded-lg ring-1 ring-slate-200">
-            {isLoading ? (
-              <CommandPrimitive.Loading>
-                <div className="p-1">
-                  <Skeleton className="h-8 w-full" />
-                </div>
-              </CommandPrimitive.Loading>
-            ) : null}
-            {options.length > 0 && !isLoading ? (
-              <CommandGroup>
-                {options.map((option) => {
-                  const isSelected = selected?.value === option.value;
-                  return (
+          {emptyMessage || options.length ? (
+            <CommandList className="rounded-lg ring-1 ring-slate-200">
+              {isLoading ? (
+                <CommandPrimitive.Loading>
+                  <div className="p-1">
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                </CommandPrimitive.Loading>
+              ) : null}
+              {options.length > 0 && !isLoading ? (
+                <CommandGroup>
+                  {options.map((option) => (
                     <CommandItem
                       key={option.value}
                       value={option.label}
@@ -134,24 +128,20 @@ export const AutoComplete = ({
                         event.stopPropagation();
                       }}
                       onSelect={() => handleSelectOption(option)}
-                      className={cn(
-                        "flex w-full items-center gap-2",
-                        !isSelected ? "pl-8" : null,
-                      )}
+                      className={cn("flex w-full items-center gap-2")}
                     >
-                      {isSelected ? <Check className="w-4" /> : null}
                       {option.label}
                     </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            ) : null}
-            {!isLoading ? (
-              <CommandPrimitive.Empty className="rounded-sm px-2 py-3 text-center text-sm select-none">
-                {emptyMessage}
-              </CommandPrimitive.Empty>
-            ) : null}
-          </CommandList>
+                  ))}
+                </CommandGroup>
+              ) : null}
+              {!isLoading ? (
+                <CommandPrimitive.Empty className="rounded-sm px-2 py-3 text-center text-sm select-none">
+                  {emptyMessage}
+                </CommandPrimitive.Empty>
+              ) : null}
+            </CommandList>
+          ) : null}
         </div>
       </div>
     </CommandPrimitive>

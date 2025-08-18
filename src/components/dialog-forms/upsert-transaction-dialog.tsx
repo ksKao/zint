@@ -145,7 +145,7 @@ export default function UpsertTransactionDialog({
     },
   });
   const [dateSelectorOpen, setDateSelectorOpen] = useState(false);
-  const [categoryDropdownRef, { width: categoryDropdownRefWidth }] =
+  const [categoryDropdownRef, { width: categoryDropdownWidth }] =
     useMeasure<HTMLButtonElement>();
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -267,7 +267,7 @@ export default function UpsertTransactionDialog({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       style={{
-                        width: categoryDropdownRefWidth + 24, // 24px padding
+                        width: categoryDropdownWidth + 24, // 24px padding
                       }}
                     >
                       {existingCategories.map((cat) =>
