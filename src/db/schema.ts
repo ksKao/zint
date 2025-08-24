@@ -71,7 +71,7 @@ export const widgets = sqliteTable("widgets", {
   y: integer("y").notNull(),
   width: integer("width").notNull(),
   height: integer("height").notNull(),
-  config: text("name", { mode: "json" }).notNull(),
+  config: text("config", { mode: "json" }).notNull(),
   accountId: text("account_id")
     .references(() => accounts.id, { onDelete: "cascade" })
     .notNull(),

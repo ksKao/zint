@@ -6,7 +6,7 @@ export const Route = createFileRoute("/")({
 
 function RouteComponent() {
   return (
-    <div className="text-muted-foreground flex w-full items-center justify-center">
+    <div className="text-muted-foreground flex h-full w-full items-center justify-center">
       Select an account to get started
     </div>
   );

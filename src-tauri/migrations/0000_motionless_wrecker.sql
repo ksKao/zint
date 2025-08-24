@@ -48,6 +48,7 @@ CREATE TABLE `widgets` (
 	`y` integer NOT NULL,
 	`width` integer NOT NULL,
 	`height` integer NOT NULL,
+	`config` text NOT NULL,
 	`account_id` text NOT NULL,
 	FOREIGN KEY (`account_id`) REFERENCES `accounts`(`id`) ON UPDATE no action ON DELETE cascade
 );

@@ -1,4 +1,6 @@
+import CategoryDropdown from "@/components/category/category-dropdown";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogClose,
@@ -8,16 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuPortal,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Form,
   FormControl,
@@ -32,30 +24,27 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { db } from "@/db";
 import { transactions } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
 import { getDateAtMidnight } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { gt, sql } from "drizzle-orm";
-import { CalendarIcon, ChevronDown, Info } from "lucide-react";
-import { useMemo, useState } from "react";
+import { CalendarIcon, Info } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useMeasure } from "react-use";
 import { toast } from "sonner";
 import z from "zod/v4";
 import { create } from "zustand";
-import CategoryIcon from "../category/category-icon";
-import { Calendar } from "../ui/calendar";
-import { Switch } from "../ui/switch";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type UpsertTransactionDialogState = {
   open: boolean;
@@ -86,19 +75,6 @@ export default function UpsertTransactionDialog({
 }) {
   const { open, setOpen } = useUpsertTransactionDialog();
   const queryClient = useQueryClient();
-  const { data: existingCategories } = useSuspenseQuery({
-    queryKey: [queryKeys.category, "with-sub"],
-    queryFn: async () => {
-      const results = await db.query.categories.findMany({
-        with: {
-          subCategories: true,
-        },
-        where: (categories, { eq }) => eq(categories.accountId, accountId),
-      });
-
-      return results;
-    },
-  });
   const { mutate: addTransaction, isPending } = useMutation({
     mutationFn: async (formData: z.infer<typeof formSchema>) => {
       await db.transaction(
@@ -145,8 +121,6 @@ export default function UpsertTransactionDialog({
     },
   });
   const [dateSelectorOpen, setDateSelectorOpen] = useState(false);
-  const [categoryDropdownRef, { width: categoryDropdownWidth }] =
-    useMeasure<HTMLButtonElement>();
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -161,8 +135,7 @@ export default function UpsertTransactionDialog({
     },
   });
 
-  const [dateFormValue, categoryIdFormValue, subCategoryIdFormValue] =
-    form.watch(["date", "categoryId", "subCategoryId"]);
+  const dateFormValue = form.watch("date");
   const selectedDate = new Date(
     typeof dateFormValue === "string" ||
     typeof dateFormValue === "number" ||
@@ -170,20 +143,6 @@ export default function UpsertTransactionDialog({
       ? dateFormValue
       : new Date(),
   );
-
-  const selectedCategoryName = useMemo(() => {
-    if (!categoryIdFormValue && !subCategoryIdFormValue) return null;
-
-    for (const category of existingCategories) {
-      for (const subCategory of category.subCategories) {
-        if (subCategory.id === subCategoryIdFormValue) return subCategory.name;
-      }
-
-      if (category.id === categoryIdFormValue) return category.name;
-    }
-
-    return null;
-  }, [categoryIdFormValue, subCategoryIdFormValue, existingCategories]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -249,73 +208,18 @@ export default function UpsertTransactionDialog({
                 />
               </div>
               <div className="w-1/2">
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      asChild
-                      disabled={!existingCategories.length}
-                    >
-                      <Button
-                        variant="outline"
-                        className="justify-between"
-                        ref={categoryDropdownRef}
-                      >
-                        {selectedCategoryName ?? "Select a category"}
-                        <ChevronDown />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      style={{
-                        width: categoryDropdownWidth + 24, // 24px padding
-                      }}
-                    >
-                      {existingCategories.map((cat) =>
-                        cat.subCategories.length ? (
-                          <DropdownMenuSub key={cat.id}>
-                            <DropdownMenuSubTrigger className="flex gap-4">
-                              <CategoryIcon category={cat} />
-                              {cat.name}
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                              <DropdownMenuSubContent>
-                                {cat.subCategories.map((subCat) => (
-                                  <DropdownMenuItem
-                                    key={subCat.id}
-                                    onSelect={() => {
-                                      form.setValue("subCategoryId", subCat.id);
-                                      form.setValue("categoryId", cat.id);
-                                    }}
-                                    className="flex gap-4"
-                                  >
-                                    <CategoryIcon category={subCat} />
-                                    {subCat.name}
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                          </DropdownMenuSub>
-                        ) : (
-                          <DropdownMenuItem
-                            key={cat.id}
-                            onSelect={() => {
-                              form.setValue("categoryId", cat.id);
-                              form.setValue("subCategoryId", null);
-                            }}
-                            className="flex gap-4"
-                          >
-                            <CategoryIcon category={cat} />
-                            {cat.name}
-                          </DropdownMenuItem>
-                        ),
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <FormMessage>
-                    {form.formState.errors.subCategoryId?.message ||
-                      form.formState.errors.categoryId?.message}
-                  </FormMessage>
-                </FormItem>
+                <CategoryDropdown
+                  onSelect={({ categoryId, subCategoryId }) => {
+                    form.setValue("categoryId", categoryId);
+                    form.setValue("subCategoryId", subCategoryId);
+                  }}
+                  selectedCategoryId={form.watch("categoryId")}
+                  selectedSubcategoryId={form.watch("subCategoryId")}
+                  errorMessage={
+                    form.formState.errors.subCategoryId?.message ||
+                    form.formState.errors.categoryId?.message
+                  }
+                />
               </div>
             </div>
             <FormField
