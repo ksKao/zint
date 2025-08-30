@@ -1,4 +1,4 @@
-import CategoryDropdown from "@/components/category/category-dropdown";
+import CategoryDropdownMulti from "@/components/category/category-dropdown-multi";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -30,6 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  categoryFilterOperators,
   dateFilterOperators,
   filterFieldOptions,
   numberFilterOperators,
@@ -39,7 +40,7 @@ import {
 } from "@/lib/types/widget.type";
 import { format } from "date-fns";
 import { ArrowLeftRightIcon, CalendarIcon, XIcon } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 
 export default function FilterRow({
@@ -175,23 +176,26 @@ export default function FilterRow({
         };
       case "Category":
         return {
-          operators: stringFilterOperators,
+          operators: categoryFilterOperators,
           valueFieldComponent: (
-            <CategoryDropdown
-              label=""
-              onSelect={({ categoryId, subCategoryId }) => {
-                form.setValue(
-                  `filters.${index}.value`,
-                  subCategoryId || categoryId,
-                );
-              }}
-              selectedCategoryId={String(
-                form.watch(`filters.${index}.value` as const),
-              )}
-              selectedSubcategoryId={String(
-                form.watch(`filters.${index}.value` as const),
-              )}
-            />
+            <Suspense>
+              <CategoryDropdownMulti
+                label=""
+                selectedIds={Array.isArray(filterValue) ? filterValue : []}
+                onSelectChange={(id, selected) => {
+                  let oldValue = filterValue;
+
+                  if (!Array.isArray(oldValue)) oldValue = [];
+
+                  form.setValue(
+                    `filters.${index}.value`,
+                    selected
+                      ? [...oldValue, id]
+                      : oldValue.filter((v) => v !== id),
+                  );
+                }}
+              />
+            </Suspense>
           ),
         };
       default:
@@ -314,7 +318,7 @@ export default function FilterRow({
                 <XIcon />
               </Button>
             </div>
-            <FormMessage />
+            {selectedField === "Category" ? null : <FormMessage />}
           </FormItem>
         )}
       />

@@ -11,11 +11,13 @@ import {
   count,
   eq,
   gt,
+  inArray,
   like,
   lt,
   max,
   min,
   not,
+  or,
   SQL,
   sql,
   sum,
@@ -78,6 +80,18 @@ function getOperatorFunction(
       return lt(column, value);
     case "Includes":
       return like(column, value.toString());
+    case "One Of": {
+      if (!Array.isArray(value))
+        throw new Error("Invalid category filter value");
+
+      const sqlRes = or(
+        inArray(column, value),
+        inArray(transactions.subCategoryId, value),
+      );
+
+      if (!sqlRes) throw new Error("Could not filter by category");
+      return sqlRes;
+    }
   }
 }
 
@@ -113,6 +127,7 @@ export function handleFilters<T extends SQLiteSelect>(
       filter.operator,
       filter.value,
     );
+
     if (filter.reverseFilter) operatorFunction = not(operatorFunction);
 
     qb = qb.where(operatorFunction);

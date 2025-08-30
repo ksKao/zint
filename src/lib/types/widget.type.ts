@@ -48,6 +48,7 @@ export const numberFilterOperators = [
   "Greater Than",
 ] as const;
 export const dateFilterOperators = ["Before", "Equals", "After"] as const;
+export const categoryFilterOperators = ["One Of"] as const;
 
 export const presetDateFilters = [
   "Today",
@@ -82,7 +83,6 @@ const filterSchema = z
             filterFieldOptionSchema.enum["Title"],
             filterFieldOptionSchema.enum["Description"],
             filterFieldOptionSchema.enum["Payee"],
-            filterFieldOptionSchema.enum["Category"],
           ],
           "Invalid field",
         ),
@@ -90,6 +90,17 @@ const filterSchema = z
         value: z
           .string("Filter value is required")
           .min(1, "Filter value is required"),
+      }),
+      z.object({
+        field: z.literal(
+          [filterFieldOptionSchema.enum["Category"]],
+          "Invalid field",
+        ),
+        operator: z.enum(categoryFilterOperators, "Invalid operator"),
+        value: z.array(
+          z.string("Invalid category detected"),
+          "Category is required",
+        ),
       }),
       z.object(
         {
