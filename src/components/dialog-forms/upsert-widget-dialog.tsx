@@ -36,8 +36,9 @@ import { MAX_COLS } from "@/routes/$accountId/_layout";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { eq } from "drizzle-orm";
 import { ArrowDownAZIcon, ArrowUpAZIcon, Circle } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
@@ -46,12 +47,15 @@ import { create } from "zustand";
 type UpsertWidgetDialogState = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  editingWidget?: typeof widgets.$inferSelect;
+  setEditingWidget: (widget: typeof widgets.$inferSelect | undefined) => void;
 };
 
 export const useUpsertWidgetDialog = create<UpsertWidgetDialogState>()(
   (set) => ({
     open: false,
     setOpen: (open) => set({ open }),
+    setEditingWidget: (widget) => set({ editingWidget: widget }),
   }),
 );
 
@@ -65,7 +69,7 @@ export default function UpsertWidgetDialog({
 }: {
   accountId: string;
 }) {
-  const { open, setOpen } = useUpsertWidgetDialog();
+  const { open, setOpen, editingWidget } = useUpsertWidgetDialog();
   const form = useForm({
     resolver: zodResolver(widgetConfigSchemaFull),
     defaultValues: {
@@ -79,15 +83,26 @@ export default function UpsertWidgetDialog({
   const queryClient = useQueryClient();
   const { mutate: addWidget, isPending } = useMutation({
     mutationFn: async (value: z.infer<typeof widgetConfigSchemaFull>) => {
-      await db.insert(widgets).values({
-        name: value.name,
-        accountId,
-        width: 2,
-        height: 2,
-        x: emptySpace.x,
-        y: emptySpace.y,
-        config: value,
-      });
+      if (editingWidget) {
+        await db
+          .update(widgets)
+          .set({
+            ...editingWidget,
+            name: value.name,
+            config: value,
+          })
+          .where(eq(widgets.id, editingWidget.id));
+      } else {
+        await db.insert(widgets).values({
+          name: value.name,
+          accountId,
+          width: 2,
+          height: 2,
+          x: emptySpace.x,
+          y: emptySpace.y,
+          config: value,
+        });
+      }
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
@@ -107,6 +122,12 @@ export default function UpsertWidgetDialog({
       return await db.query.widgets.findMany();
     },
   });
+
+  useEffect(() => {
+    if (editingWidget)
+      form.reset({ name: editingWidget.name, ...editingWidget.config });
+    else form.reset();
+  }, [editingWidget, form]);
 
   const selectedWidgetType = form.watch("type");
 

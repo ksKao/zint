@@ -26,7 +26,7 @@ function Index() {
   const [editMode, setEditMode] = useState(false);
   const [layout, setLayout] = useState<GridLayout.Layout[]>([]);
 
-  const { setOpen } = useUpsertWidgetDialog();
+  const { setOpen, setEditingWidget } = useUpsertWidgetDialog();
   const { accountId } = Route.useParams();
   const [ref, { width }] = useMeasure<HTMLDivElement>();
   const { data: widgets } = useSuspenseQuery({
@@ -87,7 +87,14 @@ function Index() {
           >
             {editMode ? "Save" : "Edit"} Layout
           </Button>
-          <Button onClick={() => setOpen(true)}>Add Widget</Button>
+          <Button
+            onClick={() => {
+              setEditingWidget(undefined);
+              setOpen(true);
+            }}
+          >
+            Add Widget
+          </Button>
         </div>
       </div>
       <GridLayout
