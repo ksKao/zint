@@ -35,7 +35,7 @@ import {
   numberFilterOperators,
   presetDateFilters,
   stringFilterOperators,
-  Widget,
+  WidgetConfig,
 } from "@/lib/types/widget.type";
 import { format } from "date-fns";
 import { ArrowLeftRightIcon, CalendarIcon, XIcon } from "lucide-react";
@@ -49,7 +49,7 @@ export default function FilterRow({
   index: number;
   remove: () => void;
 }) {
-  const form = useFormContext<Widget>();
+  const form = useFormContext<WidgetConfig>();
 
   const selectedField = form.watch(`filters.${index}.field` as const);
   const filterValue = form.watch(`filters.${index}.value` as const);

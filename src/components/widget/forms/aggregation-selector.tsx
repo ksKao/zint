@@ -12,11 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { aggregationOptions, Widget } from "@/lib/types/widget.type";
+import { aggregationOptions, WidgetConfig } from "@/lib/types/widget.type";
 import { useFormContext } from "react-hook-form";
 
 export default function AggregationSelector() {
-  const form = useFormContext<Widget>();
+  const form = useFormContext<WidgetConfig>();
 
   return (
     <FormField

@@ -5,7 +5,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Widget } from "@/lib/types/widget.type";
+import { WidgetConfig } from "@/lib/types/widget.type";
 import { cn } from "@/lib/utils";
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import { Circle, LucideProps } from "lucide-react";
@@ -19,7 +19,7 @@ export default function IsStackedToggle({
   groupIcon: ComponentType<LucideProps>;
   stackIcon: ComponentType<LucideProps>;
 }) {
-  const form = useFormContext<Widget>();
+  const form = useFormContext<WidgetConfig>();
 
   return (
     <FormField

@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { groupByFieldOptions, Widget } from "@/lib/types/widget.type";
+import { groupByFieldOptions, WidgetConfig } from "@/lib/types/widget.type";
 import { ChartColumnBig, ChartColumnStacked } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useFormContext } from "react-hook-form";
@@ -22,7 +22,7 @@ import IsStackedToggle from "./is-stacked-toggle";
 import XAxisSelector from "./x-axis-selector";
 
 export default function BarChartConfigForm() {
-  const form = useFormContext<Widget>();
+  const form = useFormContext<WidgetConfig>();
 
   const groupBy = form.watch("groupBy");
 

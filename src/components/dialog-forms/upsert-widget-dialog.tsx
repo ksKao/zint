@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -26,20 +27,21 @@ import {
 import BarChartConfigForm from "@/components/widget/forms/bar-chart-config-form";
 import FilterListForm from "@/components/widget/forms/filter-list-form";
 import LineChartConfigForm from "@/components/widget/forms/line-chart-config-form";
-import { Widget, widgetSchema, widgetTypes } from "@/lib/types/widget.type";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { create } from "zustand";
-import * as RadioGroup from "@radix-ui/react-radio-group";
-import { cn } from "@/lib/utils";
-import { ArrowDownAZIcon, ArrowUpAZIcon, Circle } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db";
 import { widgets } from "@/db/schema";
-import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
+import { widgetConfigSchema, widgetTypes } from "@/lib/types/widget.type";
+import { cn } from "@/lib/utils";
+import { MAX_COLS } from "@/routes/$accountId/_layout";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as RadioGroup from "@radix-ui/react-radio-group";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowDownAZIcon, ArrowUpAZIcon, Circle } from "lucide-react";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod/v4";
+import { create } from "zustand";
 
 type UpsertWidgetDialogState = {
   open: boolean;
@@ -53,6 +55,11 @@ export const useUpsertWidgetDialog = create<UpsertWidgetDialogState>()(
   }),
 );
 
+const widgetConfigSchemaFull = z.intersection(
+  widgetConfigSchema,
+  z.object({ name: z.string() }),
+);
+
 export default function UpsertWidgetDialog({
   accountId,
 }: {
@@ -60,7 +67,7 @@ export default function UpsertWidgetDialog({
 }) {
   const { open, setOpen } = useUpsertWidgetDialog();
   const form = useForm({
-    resolver: zodResolver(widgetSchema),
+    resolver: zodResolver(widgetConfigSchemaFull),
     defaultValues: {
       name: "",
       type: "Bar Chart",
@@ -71,14 +78,14 @@ export default function UpsertWidgetDialog({
   });
   const queryClient = useQueryClient();
   const { mutate: addWidget, isPending } = useMutation({
-    mutationFn: async (value: Widget) => {
+    mutationFn: async (value: z.infer<typeof widgetConfigSchemaFull>) => {
       await db.insert(widgets).values({
         name: value.name,
         accountId,
         width: 2,
         height: 2,
-        x: 0,
-        y: 0,
+        x: emptySpace.x,
+        y: emptySpace.y,
         config: value,
       });
     },
@@ -94,7 +101,49 @@ export default function UpsertWidgetDialog({
     },
   });
 
+  const { data: existingWidgets } = useQuery({
+    queryKey: [queryKeys.widget],
+    queryFn: async () => {
+      return await db.query.widgets.findMany();
+    },
+  });
+
   const selectedWidgetType = form.watch("type");
+
+  const emptySpace = useMemo(() => {
+    const minNewWidgetWidth = 2;
+    const minNewWidgetHeight = 2;
+
+    if (!existingWidgets) return { x: 0, y: 0 };
+
+    // Start scanning from y = 0 and go down until a space is found
+    let y = 0;
+
+    while (true) {
+      for (let x = 0; x <= MAX_COLS - minNewWidgetWidth; x++) {
+        let can_fit = true;
+
+        for (const widget of existingWidgets) {
+          const overlaps =
+            x < widget.x + widget.width &&
+            x + minNewWidgetWidth > widget.x &&
+            y < widget.y + widget.height &&
+            y + minNewWidgetHeight > widget.y;
+
+          if (overlaps) {
+            can_fit = false;
+            break;
+          }
+        }
+
+        if (can_fit) {
+          return { x, y };
+        }
+      }
+
+      y += 1; // Keep scanning further down
+    }
+  }, [existingWidgets]);
 
   const chartSpecificFields = useMemo(() => {
     switch (selectedWidgetType) {

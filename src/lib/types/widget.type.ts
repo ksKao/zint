@@ -127,7 +127,6 @@ const filterSchema = z
 
 const baseWidgetSchema = z.object({
   type: widgetTypeSchema,
-  name: z.string("Widget name is required").min(1, "Widget name is required"),
   filters: z.array(filterSchema),
   sortBy: z.enum(sortByFieldOptions),
   limit: z
@@ -170,10 +169,10 @@ const lineChartSchema = z.object({
     .default(null),
 });
 
-export const widgetSchema = z.discriminatedUnion(
+export const widgetConfigSchema = z.discriminatedUnion(
   "type",
   [barChartSchema, lineChartSchema],
   "Invalid widget type",
 );
 
-export type Widget = z.infer<typeof widgetSchema>;
+export type WidgetConfig = z.infer<typeof widgetConfigSchema>;

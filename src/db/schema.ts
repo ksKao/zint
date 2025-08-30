@@ -7,6 +7,7 @@ import {
 } from "drizzle-orm/sqlite-core";
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
+import { WidgetConfig } from "@/lib/types/widget.type";
 
 const cuidField = text("id").$defaultFn(createId).primaryKey();
 
@@ -71,7 +72,7 @@ export const widgets = sqliteTable("widgets", {
   y: integer("y").notNull(),
   width: integer("width").notNull(),
   height: integer("height").notNull(),
-  config: text("config", { mode: "json" }).notNull(),
+  config: text("config", { mode: "json" }).notNull().$type<WidgetConfig>(),
   accountId: text("account_id")
     .references(() => accounts.id, { onDelete: "cascade" })
     .notNull(),

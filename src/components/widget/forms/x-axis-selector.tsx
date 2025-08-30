@@ -12,11 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Widget, xAxisOptions } from "@/lib/types/widget.type";
+import { WidgetConfig, xAxisOptions } from "@/lib/types/widget.type";
 import { useFormContext } from "react-hook-form";
 
 export default function XAxisSelector() {
-  const form = useFormContext<Widget>();
+  const form = useFormContext<WidgetConfig>();
 
   return (
     <FormField

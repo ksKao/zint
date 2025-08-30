@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Widget } from "@/lib/types/widget.type";
+import { WidgetConfig } from "@/lib/types/widget.type";
 import { Plus } from "lucide-react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import FilterRow from "./filter-row";
 
 export default function FilterListForm() {
-  const form = useFormContext<Widget>();
+  const form = useFormContext<WidgetConfig>();
   const fieldArray = useFieldArray({
     control: form.control,
     name: "filters",

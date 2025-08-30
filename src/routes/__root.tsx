@@ -8,7 +8,7 @@ export const Route = createRootRoute({
     <div className="flex h-screen w-screen">
       <AddAccountDialog />
       <Navbar />
-      <main className="grow">
+      <main className="grow overflow-y-auto">
         <Outlet />
       </main>
       <Toaster richColors position="top-center" />
