@@ -77,33 +77,32 @@ export default function UpsertTransactionDialog({
   const queryClient = useQueryClient();
   const { mutate: addTransaction, isPending } = useMutation({
     mutationFn: async (formData: z.infer<typeof formSchema>) => {
-      await db.transaction(async (tx) => {
-        const latestTransaction = await tx.query.transactions.findFirst({
-          where: (t, { lte }) => lte(t.date, formData.date),
-          orderBy: (t, { desc }) => [desc(t.date), desc(t.order)],
-        });
-
-        const payload: typeof transactions.$inferInsert = {
-          accountId,
-          ...formData,
-          balance:
-            latestTransaction?.balance === undefined
-              ? formData.amount
-              : latestTransaction.balance + formData.amount,
-          order:
-            latestTransaction?.date?.getTime() === formData.date.getTime()
-              ? latestTransaction.order + 1
-              : 0,
-        };
-
-        await tx.insert(transactions).values(payload);
-        await tx
-          .update(transactions)
-          .set({
-            balance: sql`${transactions.balance} + ${formData.amount}`,
-          })
-          .where(gt(transactions.date, formData.date));
+      // transaction doesnt work in sqlx and tauri
+      const latestTransaction = await db.query.transactions.findFirst({
+        where: (t, { lte }) => lte(t.date, formData.date),
+        orderBy: (t, { desc }) => [desc(t.date), desc(t.order)],
       });
+
+      const payload: typeof transactions.$inferInsert = {
+        accountId,
+        ...formData,
+        balance:
+          latestTransaction?.balance === undefined
+            ? formData.amount
+            : latestTransaction.balance + formData.amount,
+        order:
+          latestTransaction?.date?.getTime() === formData.date.getTime()
+            ? latestTransaction.order + 1
+            : 0,
+      };
+
+      await db.insert(transactions).values(payload);
+      await db
+        .update(transactions)
+        .set({
+          balance: sql`${transactions.balance} + ${formData.amount}`,
+        })
+        .where(gt(transactions.date, formData.date));
     },
     onSuccess: () => {
       toast.success("Transaction has been added.");

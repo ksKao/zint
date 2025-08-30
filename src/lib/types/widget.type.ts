@@ -24,7 +24,13 @@ export const groupByFieldOptions = [
   "Subcategory",
 ] as const;
 
-export const aggregationOptions = ["Count", "Sum", "Average", "Max", "Min"];
+export const aggregationOptions = [
+  "Count",
+  "Sum",
+  "Average",
+  "Max",
+  "Min",
+] as const;
 
 export const filterFieldOptions = [
   "Title",
