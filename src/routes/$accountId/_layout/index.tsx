@@ -38,16 +38,19 @@ function Index() {
 
   const { mutate: saveLayout, isPending: saveLayoutPending } = useMutation({
     mutationFn: async () => {
-      await db.transaction(async (tx) => {
-        // use for loop here because there were some issues with Promise.all
-        // shouldn't affect performance that much since users usually don't have hundreds of widgets
-        for (const item of layout) {
-          await tx
-            .update(widgetTable)
-            .set({ x: item.x, y: item.y, width: item.w, height: item.h })
-            .where(eq(widgetTable.id, item.i));
-        }
-      });
+      await db.transaction(
+        async (tx) => {
+          // use for loop here because there were some issues with Promise.all
+          // shouldn't affect performance that much since users usually don't have hundreds of widgets
+          for (const item of layout) {
+            await tx
+              .update(widgetTable)
+              .set({ x: item.x, y: item.y, width: item.w, height: item.h })
+              .where(eq(widgetTable.id, item.i));
+          }
+        },
+        { behavior: "exclusive" },
+      );
     },
     onSuccess: () => {
       toast.success("Layout has been saved.");

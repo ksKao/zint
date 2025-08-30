@@ -22,26 +22,31 @@ export const db = drizzle<typeof schema>(
     let rows: unknown = [];
     let results = [];
 
-    // If the query is a SELECT, use the select method
-    if (isSelectQuery(sql)) {
-      rows = await sqlite.select(sql, params);
-    } else {
-      // Otherwise, use the execute method
-      rows = await sqlite.execute(sql, params);
-      return { rows: [] };
+    try {
+      // If the query is a SELECT, use the select method
+      if (isSelectQuery(sql)) {
+        rows = await sqlite.select(sql, params);
+      } else {
+        // Otherwise, use the execute method
+        rows = await sqlite.execute(sql, params);
+        return { rows: [] };
+      }
+
+      if (Array.isArray(rows)) {
+        rows = rows.map((row) => {
+          return Object.values(row);
+        });
+      }
+
+      if (Array.isArray(rows))
+        // If the method is "all", return all rows
+        results = method === "all" ? rows : rows[0];
+
+      return { rows: results };
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
-
-    if (Array.isArray(rows)) {
-      rows = rows.map((row) => {
-        return Object.values(row);
-      });
-    }
-
-    if (Array.isArray(rows))
-      // If the method is "all", return all rows
-      results = method === "all" ? rows : rows[0];
-
-    return { rows: results };
   },
   // Pass the schema to the drizzle instance
   { schema: schema, logger: true },

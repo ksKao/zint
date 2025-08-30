@@ -135,7 +135,7 @@ const baseWidgetSchema = z.object({
     .default(0),
 });
 
-const barChartSchema = z.object({
+export const barChartSchema = z.object({
   ...baseWidgetSchema.shape,
   type: z.literal(widgetTypeSchema.enum["Bar Chart"]),
   xAxis: xAxisSchema,
@@ -149,7 +149,7 @@ const barChartSchema = z.object({
     .default(null),
 });
 
-const lineChartSchema = z.object({
+export const lineChartSchema = z.object({
   ...baseWidgetSchema.shape,
   type: z.literal(widgetTypeSchema.enum["Line Chart"]),
   xAxis: xAxisSchema,
