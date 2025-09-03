@@ -1,4 +1,3 @@
-import { db } from "@/db";
 import {
   xAxisOptions,
   aggregationOptions,
@@ -23,61 +22,61 @@ import {
   sql,
   sum,
 } from "drizzle-orm";
-import { SQLiteSelect } from "drizzle-orm/sqlite-core";
+import { SQLiteColumn, SQLiteSelect } from "drizzle-orm/sqlite-core";
 
 export const selectMonthSql = sql`strftime('%Y-%m', ${transactions.date}, 'unixepoch', 'localtime')`;
 export const selectYearSql = sql`strftime('%Y', ${transactions.date}, 'unixepoch', 'localtime')`;
 
-export function getTransactionXAxisSelect(
+export function getTransactionXAxisSelectColumn(
   xAxis: (typeof xAxisOptions)[number],
-): Parameters<typeof db.select>[0] {
+): SQLiteColumn | SQL {
   switch (xAxis) {
     case "Category":
-      return { x: categories.name };
+      return categories.name;
     case "Subcategory":
-      return { x: subCategories.name };
+      return subCategories.name;
     case "Date":
-      return { x: transactions.date };
+      return transactions.date;
     case "Month":
-      return { x: selectMonthSql };
+      return selectMonthSql;
     case "Year":
-      return { x: selectYearSql };
+      return selectYearSql;
     case "Payee":
-      return { x: transactions.payee };
+      return transactions.payee;
   }
 }
 
 export function getTransactionAggregationOptionSelect(
   aggregationOption: (typeof aggregationOptions)[number],
-): Parameters<typeof db.select>[0] {
+): SQL {
   switch (aggregationOption) {
     case "Count":
-      return { y: count() };
+      return count();
     case "Average":
-      return { y: avg(transactions.amount) };
+      return avg(transactions.amount);
     case "Max":
-      return { y: max(transactions.amount) };
+      return max(transactions.amount);
     case "Min":
-      return { y: min(transactions.amount) };
+      return min(transactions.amount);
     case "Sum":
-      return { y: sum(transactions.amount) };
+      return sum(transactions.amount);
   }
 }
 
 export function getTransactionGroupBySelect(
   groupByField: (typeof groupByFieldOptions)[number] | undefined,
-): Parameters<typeof db.select>[0] {
-  if (!groupByField) return {};
+): SQLiteColumn | SQL | undefined {
+  if (!groupByField) return undefined;
 
   switch (groupByField) {
     case "Category":
-      return { groupBy: transactions.categoryId };
+      return categories.name;
     case "Month":
-      return { groupBy: selectMonthSql };
+      return selectMonthSql;
     case "Year":
-      return { groupBy: selectYearSql };
+      return selectYearSql;
     case "Subcategory":
-      return { groupBy: transactions.subCategoryId };
+      return subCategories.name;
   }
 }
 

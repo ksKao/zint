@@ -40,7 +40,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { gt, sql } from "drizzle-orm";
 import { CalendarIcon, Info } from "lucide-react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
@@ -202,18 +202,20 @@ export default function UpsertTransactionDialog({
                 />
               </div>
               <div className="w-1/2">
-                <CategoryDropdown
-                  onSelect={({ categoryId, subCategoryId }) => {
-                    form.setValue("categoryId", categoryId);
-                    form.setValue("subCategoryId", subCategoryId);
-                  }}
-                  selectedCategoryId={form.watch("categoryId")}
-                  selectedSubcategoryId={form.watch("subCategoryId")}
-                  errorMessage={
-                    form.formState.errors.subCategoryId?.message ||
-                    form.formState.errors.categoryId?.message
-                  }
-                />
+                <Suspense>
+                  <CategoryDropdown
+                    onSelect={({ categoryId, subCategoryId }) => {
+                      form.setValue("categoryId", categoryId);
+                      form.setValue("subCategoryId", subCategoryId);
+                    }}
+                    selectedCategoryId={form.watch("categoryId")}
+                    selectedSubcategoryId={form.watch("subCategoryId")}
+                    errorMessage={
+                      form.formState.errors.subCategoryId?.message ||
+                      form.formState.errors.categoryId?.message
+                    }
+                  />
+                </Suspense>
               </div>
             </div>
             <FormField

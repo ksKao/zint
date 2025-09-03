@@ -3,7 +3,7 @@ import { categories, subCategories, transactions } from "@/db/schema";
 import {
   getTransactionAggregationOptionSelect,
   getTransactionGroupBySelect,
-  getTransactionXAxisSelect,
+  getTransactionXAxisSelectColumn,
   handleFilters,
   selectMonthSql,
   selectYearSql,
@@ -11,7 +11,7 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 import { barChartSchema } from "@/lib/types/widget.type";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { eq, SQL } from "drizzle-orm";
+import { eq, sql, SQL } from "drizzle-orm";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import z from "zod/v4";
 import {
@@ -34,11 +34,14 @@ export default function BarWidget({
   const { data } = useSuspenseQuery({
     queryKey: [queryKeys.transaction, config],
     queryFn: async () => {
+      const xAxisSelectColumn = getTransactionXAxisSelectColumn(config.xAxis);
+      const groupBySelect = getTransactionGroupBySelect(config.groupBy?.field);
+
       let query = db
         .select({
-          ...getTransactionXAxisSelect(config.xAxis),
-          ...getTransactionAggregationOptionSelect(config.aggregationOption),
-          ...getTransactionGroupBySelect(config?.groupBy?.field),
+          x: sql`ifnull(${xAxisSelectColumn}, 'N/A')`,
+          y: getTransactionAggregationOptionSelect(config.aggregationOption),
+          groupBy: groupBySelect ? sql`ifnull(${groupBySelect}, 'N/A')` : sql``,
         })
         .from(transactions)
         .leftJoin(categories, eq(categories.id, transactions.categoryId))
@@ -57,7 +60,7 @@ export default function BarWidget({
           groupByColumns.push(transactions.categoryId);
           break;
         case "Subcategory":
-          groupByColumns.push(transactions.categoryId);
+          groupByColumns.push(transactions.subCategoryId);
           break;
         case "Month":
           groupByColumns.push(selectMonthSql);
@@ -91,11 +94,21 @@ export default function BarWidget({
 
       query = handleFilters(query, config.filters);
 
+      query = query.orderBy(
+        config.sortBy === "Ascending"
+          ? sql`${xAxisSelectColumn} asc nulls last`
+          : sql`${xAxisSelectColumn} desc nulls last`,
+      );
+
       const result = await query;
 
       if (config.groupBy) {
         const allGroupBys = [
-          ...new Set(result.map((item) => item.groupBy as string)),
+          ...new Set(
+            result
+              .map((item) => (item.groupBy ?? "Unknown") as string)
+              .sort((a, b) => a.localeCompare(b)),
+          ),
         ];
 
         // Step 2: Group by `x`
@@ -137,7 +150,7 @@ export default function BarWidget({
           return prev;
         }, {} as ChartConfig)}
         className="w-full"
-        style={{ height: ROW_HEIGHT * layout.h - 41 }} // 41 is the height of the header
+        style={{ height: Math.max(ROW_HEIGHT * layout.h - 41, 1) }} // 41 is the height of the header
       >
         <BarChart accessibilityLayer data={data.values}>
           <CartesianGrid vertical={false} />
