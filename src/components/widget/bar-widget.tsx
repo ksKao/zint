@@ -41,7 +41,9 @@ export default function BarWidget({
         .select({
           x: sql`ifnull(${xAxisSelectColumn}, 'N/A')`,
           y: getTransactionAggregationOptionSelect(config.aggregationOption),
-          groupBy: groupBySelect ? sql`ifnull(${groupBySelect}, 'N/A')` : sql``,
+          groupBy: groupBySelect
+            ? sql`ifnull(${groupBySelect}, 'N/A')`
+            : sql`''`,
         })
         .from(transactions)
         .leftJoin(categories, eq(categories.id, transactions.categoryId))
