@@ -14,7 +14,12 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { eq, SQL } from "drizzle-orm";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import z from "zod/v4";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "../ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 import ReactGridLayout from "react-grid-layout";
 import { ROW_HEIGHT } from "@/routes/$accountId/_layout";
@@ -127,11 +132,10 @@ export default function BarWidget({
   return (
     <div className="h-full max-h-full w-full max-w-full">
       <ChartContainer
-        config={{
-          "2025-06": { label: "2025-06" },
-          "2025-07": { label: "2025-07" },
-          "2025-08": { label: "2025-08" },
-        }}
+        config={data.keys.reduce((prev, curr) => {
+          prev[curr] = { label: curr };
+          return prev;
+        }, {} as ChartConfig)}
         className="w-full"
         style={{ height: ROW_HEIGHT * layout.h - 41 }} // 41 is the height of the header
       >
