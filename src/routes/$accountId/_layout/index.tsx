@@ -15,16 +15,37 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { useMeasure } from "react-use";
 import { toast } from "sonner";
+import { create } from "zustand";
 
 export const Route = createFileRoute("/$accountId/_layout/")({
   component: Index,
 });
 
 export const MAX_COLS = 12;
+export const ROW_HEIGHT = 100;
+
+type LocalDashboardLayoutState = {
+  layout: GridLayout.Layout[];
+  tempLayout: GridLayout.Layout[]; // represents the layout that is currently being dragged
+  setLayout: (layout: GridLayout.Layout[]) => void;
+  setTempLayout: (layout: GridLayout.Layout[]) => void;
+};
+
+export const useLocalDashboardLayout = create<LocalDashboardLayoutState>()(
+  (set) => ({
+    layout: [],
+    tempLayout: [],
+    setLayout: (layout) => {
+      set({ layout, tempLayout: layout });
+    },
+    setTempLayout: (layout) => set({ tempLayout: layout }),
+  }),
+);
 
 function Index() {
   const [editMode, setEditMode] = useState(false);
-  const [layout, setLayout] = useState<GridLayout.Layout[]>([]);
+  const { layout, setLayout, tempLayout, setTempLayout } =
+    useLocalDashboardLayout();
 
   const { setOpen, setEditingWidget } = useUpsertWidgetDialog();
   const { accountId } = Route.useParams();
@@ -67,7 +88,7 @@ function Index() {
         h: widget.height,
       })),
     );
-  }, [widgets]);
+  }, [widgets, setLayout]);
 
   return (
     <div className="w-full px-4 py-8">
@@ -108,9 +129,24 @@ function Index() {
         preventCollision
         allowOverlap={false}
         cols={MAX_COLS}
-        rowHeight={100}
+        rowHeight={ROW_HEIGHT}
         margin={[8, 8]}
         compactType={null}
+        onResize={(e) => {
+          // find reference
+          const resizeTarget = e[0];
+
+          if (!resizeTarget) return;
+
+          const found = tempLayout.find((w) => w.i === e[0]?.i);
+
+          if (found) {
+            found.h = resizeTarget.h;
+            found.w = resizeTarget.w;
+
+            setTempLayout([...tempLayout]);
+          }
+        }}
         onLayoutChange={setLayout}
       >
         {widgets.map((widget) => (

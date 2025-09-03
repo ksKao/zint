@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit2Icon, EllipsisIcon } from "lucide-react";
 import { useUpsertWidgetDialog } from "@/components/dialog-forms/upsert-widget-dialog";
+import { useLocalDashboardLayout } from "@/routes/$accountId/_layout";
 
 export default function Widget({
   widget,
@@ -18,14 +19,19 @@ export default function Widget({
   widget: InferSelectModel<typeof widgets>;
 }) {
   const { setOpen, setEditingWidget } = useUpsertWidgetDialog();
+  const { tempLayout } = useLocalDashboardLayout();
   const component = useMemo(() => {
+    const widgetLayout = tempLayout.find((w) => w.i === widget.id);
+
+    if (!widgetLayout) return null;
+
     switch (widget.config.type) {
       case "Bar Chart":
-        return <BarWidget config={widget.config} />;
+        return <BarWidget config={widget.config} layout={widgetLayout} />;
       default:
         return null;
     }
-  }, [widget]);
+  }, [widget, tempLayout]);
 
   return (
     <div className="bg-card relative flex h-full w-full flex-col rounded-md border">

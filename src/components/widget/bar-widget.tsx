@@ -2,19 +2,29 @@ import { db } from "@/db";
 import { categories, subCategories, transactions } from "@/db/schema";
 import {
   getTransactionAggregationOptionSelect,
+  getTransactionGroupBySelect,
   getTransactionXAxisSelect,
   handleFilters,
+  selectMonthSql,
+  selectYearSql,
 } from "@/lib/query-builder-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { barChartSchema } from "@/lib/types/widget.type";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { eq, sql } from "drizzle-orm";
+import { eq, SQL } from "drizzle-orm";
+import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import z from "zod/v4";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import ReactGridLayout from "react-grid-layout";
+import { ROW_HEIGHT } from "@/routes/$accountId/_layout";
 
 export default function BarWidget({
   config,
+  layout,
 }: {
   config: z.infer<typeof barChartSchema>;
+  layout: ReactGridLayout.Layout;
 }) {
   const { data } = useSuspenseQuery({
     queryKey: [queryKeys.transaction, config],
@@ -23,6 +33,7 @@ export default function BarWidget({
         .select({
           ...getTransactionXAxisSelect(config.xAxis),
           ...getTransactionAggregationOptionSelect(config.aggregationOption),
+          ...getTransactionGroupBySelect(config?.groupBy?.field),
         })
         .from(transactions)
         .leftJoin(categories, eq(categories.id, transactions.categoryId))
@@ -32,38 +43,115 @@ export default function BarWidget({
         )
         .$dynamic();
 
+      const groupByColumns: (SQLiteColumn | SQL)[] = [];
       switch (config.xAxis) {
         case "Date":
-          query = query.groupBy(transactions.date);
+          groupByColumns.push(transactions.date);
           break;
         case "Category":
-          query = query.groupBy(transactions.categoryId);
+          groupByColumns.push(transactions.categoryId);
           break;
         case "Subcategory":
-          query = query.groupBy(transactions.subCategoryId);
+          groupByColumns.push(transactions.categoryId);
           break;
         case "Month":
-          query = query.groupBy(
-            sql`strftime('%Y-%m', ${transactions.date}, 'unixepoch', 'localtime')`,
-          );
+          groupByColumns.push(selectMonthSql);
           break;
         case "Year":
-          query = query.groupBy(
-            sql`strftime('%Y', ${transactions.date}, 'unixepoch', 'localtime')`,
-          );
+          groupByColumns.push(selectYearSql);
           break;
         case "Payee":
-          query = query.groupBy(transactions.payee);
+          groupByColumns.push(transactions.payee);
           break;
       }
 
+      if (config.groupBy) {
+        switch (config.groupBy.field) {
+          case "Category":
+            groupByColumns.push(transactions.categoryId);
+            break;
+          case "Subcategory":
+            groupByColumns.push(transactions.subCategoryId);
+            break;
+          case "Month":
+            groupByColumns.push(selectMonthSql);
+            break;
+          case "Year":
+            groupByColumns.push(selectYearSql);
+            break;
+        }
+      }
+
+      query = query.groupBy(...groupByColumns);
+
       query = handleFilters(query, config.filters);
 
-      return await query;
+      const result = await query;
+
+      if (config.groupBy) {
+        const allGroupBys = [
+          ...new Set(result.map((item) => item.groupBy as string)),
+        ];
+
+        // Step 2: Group by `x`
+        const grouped: Record<
+          string,
+          {
+            x: string | null;
+            [key: string]: string | number | null;
+          }
+        > = {};
+
+        result.forEach(({ x, y, groupBy }) => {
+          const key = String(x === null ? "Unknown" : x);
+          const groupByStr = String(groupBy);
+
+          if (!grouped[key]) {
+            grouped[key] = { x: key };
+            allGroupBys.forEach((groupByKey) => {
+              if (typeof groupByKey === "string") grouped[key][groupByKey] = 0; // default value
+            });
+          }
+
+          grouped[key][groupByStr] = Number(y);
+        });
+
+        // Step 3: Convert object back to array
+        return { values: Object.values(grouped), keys: allGroupBys };
+      } else {
+        return { values: result, keys: ["y"] };
+      }
     },
   });
 
   return (
-    <pre className="break-all whitespace-normal">{JSON.stringify(data)}</pre>
+    <div className="h-full max-h-full w-full max-w-full">
+      <ChartContainer
+        config={{
+          "2025-06": { label: "2025-06" },
+          "2025-07": { label: "2025-07" },
+          "2025-08": { label: "2025-08" },
+        }}
+        className="w-full"
+        style={{ height: ROW_HEIGHT * layout.h - 41 }} // 41 is the height of the header
+      >
+        <BarChart accessibilityLayer data={data.values}>
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="x"
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
+          />
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent indicator="dashed" />}
+          />
+          {data.keys.map((key, i) => (
+            <Bar key={key} dataKey={key} fill={`var(--chart-${(i + 1) % 5})`} />
+          ))}
+        </BarChart>
+      </ChartContainer>
+    </div>
   );
 }

@@ -3,6 +3,7 @@ import {
   xAxisOptions,
   aggregationOptions,
   WidgetConfig,
+  groupByFieldOptions,
 } from "@/lib/types/widget.type";
 import { categories, subCategories, transactions } from "@/db/schema";
 import {
@@ -24,6 +25,9 @@ import {
 } from "drizzle-orm";
 import { SQLiteSelect } from "drizzle-orm/sqlite-core";
 
+export const selectMonthSql = sql`strftime('%Y-%m', ${transactions.date}, 'unixepoch', 'localtime')`;
+export const selectYearSql = sql`strftime('%Y', ${transactions.date}, 'unixepoch', 'localtime')`;
+
 export function getTransactionXAxisSelect(
   xAxis: (typeof xAxisOptions)[number],
 ): Parameters<typeof db.select>[0] {
@@ -35,13 +39,9 @@ export function getTransactionXAxisSelect(
     case "Date":
       return { x: transactions.date };
     case "Month":
-      return {
-        x: sql`strftime('%Y-%m', ${transactions.date}, 'unixepoch', 'localtime')`,
-      };
+      return { x: selectMonthSql };
     case "Year":
-      return {
-        x: sql`strftime('%Y', ${transactions.date}, 'unixepoch', 'localtime')`,
-      };
+      return { x: selectYearSql };
     case "Payee":
       return { x: transactions.payee };
   }
@@ -61,6 +61,23 @@ export function getTransactionAggregationOptionSelect(
       return { y: min(transactions.amount) };
     case "Sum":
       return { y: sum(transactions.amount) };
+  }
+}
+
+export function getTransactionGroupBySelect(
+  groupByField: (typeof groupByFieldOptions)[number] | undefined,
+): Parameters<typeof db.select>[0] {
+  if (!groupByField) return {};
+
+  switch (groupByField) {
+    case "Category":
+      return { groupBy: transactions.categoryId };
+    case "Month":
+      return { groupBy: selectMonthSql };
+    case "Year":
+      return { groupBy: selectYearSql };
+    case "Subcategory":
+      return { groupBy: transactions.subCategoryId };
   }
 }
 

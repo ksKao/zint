@@ -109,6 +109,7 @@ export default function UpsertWidgetDialog({
         queryKey: [queryKeys.widget],
       });
       toast.success("Widget has been added successfully");
+      form.reset();
       setOpen(false);
     },
     onError: () => {
@@ -125,8 +126,13 @@ export default function UpsertWidgetDialog({
 
   useEffect(() => {
     if (editingWidget)
-      form.reset({ name: editingWidget.name, ...editingWidget.config });
-    else form.reset();
+      form.reset(
+        { name: editingWidget.name, ...editingWidget.config },
+        { keepDefaultValues: true },
+      );
+    else {
+      form.reset();
+    }
   }, [editingWidget, form]);
 
   const selectedWidgetType = form.watch("type");
