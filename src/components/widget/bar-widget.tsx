@@ -139,7 +139,10 @@ export default function BarWidget({
         // Step 3: Convert object back to array
         return { values: Object.values(grouped), keys: allGroupBys };
       } else {
-        return { values: result, keys: ["y"] };
+        return {
+          values: result.map((d) => ({ x: d.x, Amount: d.y })),
+          keys: ["Amount"],
+        };
       }
     },
   });
@@ -164,7 +167,7 @@ export default function BarWidget({
           />
           <ChartTooltip
             cursor={false}
-            content={<ChartTooltipContent indicator="dashed" />}
+            content={<ChartTooltipContent indicator="line" />}
           />
           {data.keys.map((key, i) => (
             <Bar key={key} dataKey={key} fill={`var(--chart-${(i + 1) % 5})`} />
