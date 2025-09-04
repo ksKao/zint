@@ -169,6 +169,8 @@ export const barChartSchema = z.object({
     .default(null),
 });
 
+export type BarChartConfig = z.infer<typeof barChartSchema>;
+
 export const lineChartSchema = z.object({
   ...baseWidgetSchema.shape,
   type: z.literal(widgetTypeSchema.enum["Line Chart"]),
@@ -177,17 +179,14 @@ export const lineChartSchema = z.object({
   groupBy: z
     .object({
       field: groupByFieldSchema,
-      lineType: z.discriminatedUnion("type", [
-        z.object({ type: z.literal("Line") }),
-        z.object({
-          type: z.literal("Area"),
-          isStacked: z.boolean("Stacked is required"),
-        }),
-      ]),
+      isStacked: z.boolean("Stacked is required"),
+      lineType: z.literal(["Line", "Area"], "Line chart type is required."),
     })
     .nullable()
     .default(null),
 });
+
+export type LineChartConfig = z.infer<typeof lineChartSchema>;
 
 export const widgetConfigSchema = z.discriminatedUnion(
   "type",

@@ -16,6 +16,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
+import LineWidget from "./line-widget";
 
 export default function Widget({
   widget,
@@ -49,6 +50,8 @@ export default function Widget({
     switch (widget.config.type) {
       case "Bar Chart":
         return <BarWidget config={widget.config} layout={widgetLayout} />;
+      case "Line Chart":
+        return <LineWidget config={widget.config} layout={widgetLayout} />;
       default:
         return null;
     }
@@ -97,7 +100,7 @@ export default function Widget({
         </DropdownMenuContent>
       </DropdownMenu>
       <div className="border-b p-2 text-center">{widget.name}</div>
-      <div className="grow">{component}</div>
+      <div className="grow p-4">{component}</div>
     </div>
   );
 }
