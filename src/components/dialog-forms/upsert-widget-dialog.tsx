@@ -11,6 +11,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -43,6 +44,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
 import { create } from "zustand";
+import { Switch } from "../ui/switch";
 
 type UpsertWidgetDialogState = {
   open: boolean;
@@ -77,6 +79,7 @@ export default function UpsertWidgetDialog({
       type: "Bar Chart",
       limit: 0,
       sortBy: "Ascending",
+      convertToAbsolute: false,
       filters: [],
     },
   });
@@ -303,6 +306,27 @@ export default function UpsertWidgetDialog({
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                   />
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="convertToAbsolute"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Convert to Absolute Value</FormLabel>
+                    <FormDescription>
+                      Converts the amount for each transaction to a positive
+                      number (before aggregation)
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

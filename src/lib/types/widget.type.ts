@@ -146,6 +146,9 @@ const baseWidgetSchema = z.object({
   type: widgetTypeSchema,
   filters: z.array(filterSchema),
   sortBy: z.enum(sortByFieldOptions),
+  convertToAbsolute: z
+    .boolean("Convert to absolute toggle is required")
+    .default(false),
   limit: z
     .number("Limit is invalid")
     .min(0, "Limit cannot be negative")

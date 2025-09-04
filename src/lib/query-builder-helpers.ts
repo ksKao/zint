@@ -20,6 +20,7 @@ import {
   or,
   SQL,
   sql,
+  SQLWrapper,
   sum,
 } from "drizzle-orm";
 import { SQLiteColumn, SQLiteSelect } from "drizzle-orm/sqlite-core";
@@ -48,18 +49,23 @@ export function getTransactionXAxisSelectColumn(
 
 export function getTransactionAggregationOptionSelect(
   aggregationOption: (typeof aggregationOptions)[number],
+  absolute: boolean,
 ): SQL {
+  const col: SQLWrapper = absolute
+    ? sql`abs(${transactions.amount})`
+    : transactions.amount;
+
   switch (aggregationOption) {
     case "Count":
       return count();
     case "Average":
-      return avg(transactions.amount);
+      return avg(col);
     case "Max":
-      return max(transactions.amount);
+      return max(col);
     case "Min":
-      return min(transactions.amount);
+      return min(col);
     case "Sum":
-      return sum(transactions.amount);
+      return sum(col);
   }
 }
 

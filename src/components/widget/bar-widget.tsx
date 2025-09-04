@@ -40,7 +40,10 @@ export default function BarWidget({
       let query = db
         .select({
           x: sql`ifnull(${xAxisSelectColumn}, 'N/A')`,
-          y: getTransactionAggregationOptionSelect(config.aggregationOption),
+          y: getTransactionAggregationOptionSelect(
+            config.aggregationOption,
+            config.convertToAbsolute,
+          ),
           groupBy: groupBySelect
             ? sql`ifnull(${groupBySelect}, 'N/A')`
             : sql`''`,
