@@ -170,7 +170,12 @@ export default function BarWidget({
             content={<ChartTooltipContent indicator="line" />}
           />
           {data.keys.map((key, i) => (
-            <Bar key={key} dataKey={key} fill={`var(--chart-${(i + 1) % 5})`} />
+            <Bar
+              key={key}
+              dataKey={key}
+              fill={`var(--chart-${(i + 1) % 5})`}
+              stackId={config.groupBy?.isStacked ? 0 : i}
+            />
           ))}
         </BarChart>
       </ChartContainer>
