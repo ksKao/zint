@@ -1,6 +1,6 @@
 import { widgets } from "@/db/schema";
 import { eq, InferSelectModel } from "drizzle-orm";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import BarWidget from "@/components/widget/bar-widget";
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { db } from "@/db";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import LineWidget from "./line-widget";
+import PieWidget from "./pie-widget";
 
 export default function Widget({
   widget,
@@ -52,6 +53,8 @@ export default function Widget({
         return <BarWidget config={widget.config} layout={widgetLayout} />;
       case "Line Chart":
         return <LineWidget config={widget.config} layout={widgetLayout} />;
+      case "Pie Chart":
+        return <PieWidget config={widget.config} layout={widgetLayout} />;
       default:
         return null;
     }
@@ -100,7 +103,9 @@ export default function Widget({
         </DropdownMenuContent>
       </DropdownMenu>
       <div className="border-b p-2 text-center">{widget.name}</div>
-      <div className="grow p-4">{component}</div>
+      <div className="grow p-4">
+        <Suspense>{component}</Suspense>
+      </div>
     </div>
   );
 }

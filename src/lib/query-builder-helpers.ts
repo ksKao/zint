@@ -1,10 +1,11 @@
-import {
-  xAxisOptions,
-  aggregationOptions,
-  WidgetConfig,
-  groupByFieldOptions,
-} from "@/lib/types/widget.type";
+import { db } from "@/db";
 import { categories, subCategories, transactions } from "@/db/schema";
+import {
+  aggregationOptions,
+  groupByFieldOptions,
+  WidgetConfig,
+  xAxisOptions,
+} from "@/lib/types/widget.type";
 import {
   avg,
   Column,
@@ -27,6 +28,52 @@ import { SQLiteColumn, SQLiteSelect } from "drizzle-orm/sqlite-core";
 
 export const selectMonthSql = sql`strftime('%Y-%m', ${transactions.date}, 'unixepoch', 'localtime')`;
 export const selectYearSql = sql`strftime('%Y', ${transactions.date}, 'unixepoch', 'localtime')`;
+
+export function getSelectTransactionQuery({
+  select,
+  filters,
+  sortBy,
+  orderByField,
+}: {
+  select: Parameters<typeof db.select>[0];
+  filters: WidgetConfig["filters"];
+  sortBy: WidgetConfig["sortBy"];
+  orderByField: SQLiteColumn | SQL;
+}) {
+  let query = db
+    .select(select)
+    .from(transactions)
+    .leftJoin(categories, eq(categories.id, transactions.categoryId))
+    .leftJoin(subCategories, eq(subCategories.id, transactions.subCategoryId))
+    .$dynamic();
+
+  query = handleFilters(query, filters);
+
+  query = query.orderBy(
+    sortBy === "Ascending"
+      ? sql`${orderByField} asc nulls last`
+      : sql`${orderByField} desc nulls last`,
+  );
+
+  return query;
+}
+
+export function getXAxisGroupByColumn(xAxis: (typeof xAxisOptions)[number]) {
+  switch (xAxis) {
+    case "Date":
+      return transactions.date;
+    case "Category":
+      return transactions.categoryId;
+    case "Subcategory":
+      return transactions.subCategoryId;
+    case "Month":
+      return selectMonthSql;
+    case "Year":
+      return selectYearSql;
+    case "Payee":
+      return transactions.payee;
+  }
+}
 
 export function getTransactionXAxisSelectColumn(
   xAxis: (typeof xAxisOptions)[number],

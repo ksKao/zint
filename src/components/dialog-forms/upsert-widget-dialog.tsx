@@ -25,9 +25,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import BarChartConfigForm from "@/components/widget/forms/bar-chart-config-form";
 import FilterListForm from "@/components/widget/forms/filter-list-form";
 import LineChartConfigForm from "@/components/widget/forms/line-chart-config-form";
+import PieChartConfigForm from "@/components/widget/forms/pie-chart-config-form";
 import { db } from "@/db";
 import { widgets } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
@@ -44,7 +46,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
 import { create } from "zustand";
-import { Switch } from "../ui/switch";
 
 type UpsertWidgetDialogState = {
   open: boolean;
@@ -181,6 +182,8 @@ export default function UpsertWidgetDialog({
         return <BarChartConfigForm />;
       case "Line Chart":
         return <LineChartConfigForm />;
+      case "Pie Chart":
+        return <PieChartConfigForm />;
     }
   }, [selectedWidgetType]);
 

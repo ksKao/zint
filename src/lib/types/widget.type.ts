@@ -66,7 +66,10 @@ const aggregationOptionSchema = z.enum(
   aggregationOptions,
   "Aggregation function is required",
 );
-const groupByFieldSchema = z.enum(groupByFieldOptions);
+const groupByFieldSchema = z.enum(
+  groupByFieldOptions,
+  "Group by field is required",
+);
 const filterFieldOptionSchema = z.enum(filterFieldOptions);
 
 const baseFilterSchema = z.object({
@@ -180,7 +183,7 @@ export const lineChartSchema = z.object({
     .object({
       field: groupByFieldSchema,
       isStacked: z.boolean("Stacked is required"),
-      lineType: z.literal(["Line", "Area"], "Line chart type is required."),
+      lineType: z.literal(["Line", "Area"], "Line chart type is required"),
     })
     .nullable()
     .default(null),
@@ -188,9 +191,18 @@ export const lineChartSchema = z.object({
 
 export type LineChartConfig = z.infer<typeof lineChartSchema>;
 
+export const pieChartSchema = z.object({
+  ...baseWidgetSchema.shape,
+  type: z.literal(widgetTypeSchema.enum["Pie Chart"]),
+  aggregationOption: aggregationOptionSchema,
+  groupByField: z.literal(xAxisOptions, "Group by field is required"),
+});
+
+export type PieChartConfig = z.infer<typeof pieChartSchema>;
+
 export const widgetConfigSchema = z.discriminatedUnion(
   "type",
-  [barChartSchema, lineChartSchema],
+  [barChartSchema, lineChartSchema, pieChartSchema],
   "Invalid widget type",
 );
 

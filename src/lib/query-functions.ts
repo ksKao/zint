@@ -1,15 +1,15 @@
-import { db } from "@/db";
 import {
+  getSelectTransactionQuery,
   getTransactionAggregationOptionSelect,
   getTransactionGroupBySelect,
   getTransactionXAxisSelectColumn,
-  handleFilters,
+  getXAxisGroupByColumn,
   selectMonthSql,
   selectYearSql,
 } from "@/lib/query-builder-helpers";
-import { eq, SQL, sql } from "drizzle-orm";
+import { SQL, sql } from "drizzle-orm";
 import { BarChartConfig, LineChartConfig } from "@/lib/types/widget.type";
-import { categories, subCategories, transactions } from "@/db/schema";
+import { transactions } from "@/db/schema";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 
 export async function getLineOrBarChartData(
@@ -18,41 +18,23 @@ export async function getLineOrBarChartData(
   const xAxisSelectColumn = getTransactionXAxisSelectColumn(config.xAxis);
   const groupBySelect = getTransactionGroupBySelect(config.groupBy?.field);
 
-  let query = db
-    .select({
+  let query = getSelectTransactionQuery({
+    select: {
       x: sql`ifnull(${xAxisSelectColumn}, 'N/A')`,
       y: getTransactionAggregationOptionSelect(
         config.aggregationOption,
         config.convertToAbsolute,
       ),
       groupBy: groupBySelect ? sql`ifnull(${groupBySelect}, 'N/A')` : sql`''`,
-    })
-    .from(transactions)
-    .leftJoin(categories, eq(categories.id, transactions.categoryId))
-    .leftJoin(subCategories, eq(subCategories.id, transactions.subCategoryId))
-    .$dynamic();
+    },
+    filters: config.filters,
+    sortBy: config.sortBy,
+    orderByField: xAxisSelectColumn,
+  });
 
   const groupByColumns: (SQLiteColumn | SQL)[] = [];
-  switch (config.xAxis) {
-    case "Date":
-      groupByColumns.push(transactions.date);
-      break;
-    case "Category":
-      groupByColumns.push(transactions.categoryId);
-      break;
-    case "Subcategory":
-      groupByColumns.push(transactions.subCategoryId);
-      break;
-    case "Month":
-      groupByColumns.push(selectMonthSql);
-      break;
-    case "Year":
-      groupByColumns.push(selectYearSql);
-      break;
-    case "Payee":
-      groupByColumns.push(transactions.payee);
-      break;
-  }
+
+  groupByColumns.push(getXAxisGroupByColumn(config.xAxis));
 
   if (config.groupBy) {
     switch (config.groupBy.field) {
@@ -72,14 +54,6 @@ export async function getLineOrBarChartData(
   }
 
   query = query.groupBy(...groupByColumns);
-
-  query = handleFilters(query, config.filters);
-
-  query = query.orderBy(
-    config.sortBy === "Ascending"
-      ? sql`${xAxisSelectColumn} asc nulls last`
-      : sql`${xAxisSelectColumn} desc nulls last`,
-  );
 
   const result = await query;
 
