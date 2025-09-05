@@ -33,8 +33,6 @@ export default function LineWidget({
     },
   });
 
-  console.log(data);
-
   return (
     <div className="h-full max-h-full w-full max-w-full">
       <ChartContainer

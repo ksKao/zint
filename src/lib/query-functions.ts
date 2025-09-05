@@ -116,10 +116,18 @@ export async function getLineOrBarChartData(
     });
 
     // Step 3: Convert object back to array
-    return { values: Object.values(grouped), keys: allGroupBys };
+    return {
+      values: Object.values(grouped).slice(
+        0,
+        config.limit === 0 ? result.length : config.limit,
+      ),
+      keys: allGroupBys,
+    };
   } else {
     return {
-      values: result.map((d) => ({ x: d.x, Amount: Number(d.y) })),
+      values: result
+        .map((d) => ({ x: d.x, Amount: Number(d.y) }))
+        .slice(0, config.limit === 0 ? result.length : config.limit),
       keys: ["Amount"],
     };
   }
