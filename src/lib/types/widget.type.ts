@@ -52,11 +52,11 @@ export const categoryFilterOperators = ["One Of"] as const;
 
 export const presetDateFilters = [
   "Today",
-  "This Week",
-  "This Month",
-  "This Quarter",
-  "This Year",
-];
+  "First Day of This Week",
+  "First Day of This Month",
+  "First Day of This Quarter",
+  "First Day of This Year",
+] as const;
 
 export const sortByFieldOptions = ["Ascending", "Descending"] as const;
 

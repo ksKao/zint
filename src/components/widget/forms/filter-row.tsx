@@ -56,11 +56,17 @@ export default function FilterRow({
   const filterValue = form.watch(`filters.${index}.value` as const);
 
   const filterDateValueDisplay = useMemo(() => {
-    if (filterValue instanceof Date) return format(filterValue, "PPP");
+    if (selectedField !== "Date") return "";
+
+    if (
+      typeof filterValue === "string" &&
+      ([...presetDateFilters] as string[]).includes(filterValue)
+    )
+      return filterValue;
     else if (typeof filterValue === "number")
       return `${filterValue} day(s) ago`;
-    else return filterValue;
-  }, [filterValue]);
+    else return format(new Date(filterValue as string), "PPP");
+  }, [filterValue, selectedField]);
 
   const { operators, valueFieldComponent } = useMemo(() => {
     switch (selectedField) {
@@ -165,7 +171,10 @@ export default function FilterRow({
                         filterValue instanceof Date ? filterValue : undefined
                       }
                       onSelect={(val) =>
-                        form.setValue(`filters.${index}.value`, val ?? "")
+                        form.setValue(
+                          `filters.${index}.value`,
+                          val?.toISOString() ?? "",
+                        )
                       }
                     />
                   </TabsContent>

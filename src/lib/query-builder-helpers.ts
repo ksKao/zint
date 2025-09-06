@@ -3,6 +3,7 @@ import { categories, subCategories, transactions } from "@/db/schema";
 import {
   aggregationOptions,
   groupByFieldOptions,
+  presetDateFilters,
   WidgetConfig,
   xAxisOptions,
 } from "@/lib/types/widget.type";
@@ -170,6 +171,8 @@ export function handleFilters<T extends SQLiteSelect>(
 ): T {
   for (const filter of filters) {
     let column: Column;
+    let filterValue = filter.value;
+
     switch (filter.field) {
       case "Amount":
         column = transactions.amount;
@@ -179,6 +182,45 @@ export function handleFilters<T extends SQLiteSelect>(
         break;
       case "Date":
         column = transactions.date;
+        if (
+          typeof filter.value === "string" &&
+          presetDateFilters.includes(
+            filter.value as (typeof presetDateFilters)[number],
+          )
+        ) {
+          const targetDate = new Date();
+          targetDate.setHours(0, 0, 0, 0); // default target date is today at 00:00
+          switch (filter.value) {
+            case "Today":
+              break;
+            case "First Day of This Week":
+              targetDate.setDate(
+                targetDate.getDate() - ((targetDate.getDay() + 6) % 7),
+              );
+              break;
+            case "First Day of This Month":
+              targetDate.setDate(1);
+              break;
+            case "First Day of This Quarter":
+              targetDate.setMonth(
+                targetDate.getMonth() - ((targetDate.getMonth() + 1) % 3),
+              );
+              targetDate.setDate(1);
+              break;
+            case "First Day of This Year":
+              targetDate.setMonth(0);
+              targetDate.setDate(1);
+          }
+          filterValue = targetDate;
+          console.log("filter value", filterValue);
+        } else if (typeof filter.value === "number") {
+          const targetDate = new Date();
+          targetDate.setDate(targetDate.getDate() - filter.value);
+          targetDate.setHours(0, 0, 0, 0);
+          filterValue = targetDate;
+        } else {
+          filterValue = new Date(filter.value);
+        }
         break;
       case "Description":
         column = transactions.description;
@@ -194,7 +236,7 @@ export function handleFilters<T extends SQLiteSelect>(
     let operatorFunction = getOperatorFunction(
       column,
       filter.operator,
-      filter.value,
+      filterValue,
     );
 
     if (filter.reverseFilter) operatorFunction = not(operatorFunction);
