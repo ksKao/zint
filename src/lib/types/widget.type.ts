@@ -60,6 +60,28 @@ export const presetDateFilters = [
 
 export const sortByFieldOptions = ["Ascending", "Descending"] as const;
 
+export const tableWidgetRegularColumns = [
+  "Title",
+  "Description",
+  "Payee",
+  "Date",
+  "Day",
+  "Month",
+  "Year",
+  "Amount",
+  "Balance",
+  "Category",
+  "Subcategory",
+] as const;
+
+export const tableWidgetAggregationColumns = [
+  "Sum",
+  "Average",
+  "Min",
+  "Max",
+  "Count",
+] as const;
+
 const widgetTypeSchema = z.enum(widgetTypes);
 const xAxisSchema = z.enum(xAxisOptions, "X Axis is required");
 const aggregationOptionSchema = z.enum(
@@ -200,9 +222,57 @@ export const pieChartSchema = z.object({
 
 export type PieChartConfig = z.infer<typeof pieChartSchema>;
 
+export const tableWidgetSchema = z.object({
+  ...baseWidgetSchema.shape,
+  type: z.literal(widgetTypeSchema.enum["Table"]),
+  tableColumns: z
+    .array(
+      z.object(
+        {
+          column: z.literal(
+            [
+              ...tableWidgetRegularColumns,
+              ...tableWidgetAggregationColumns,
+            ] as const,
+            "Invalid table column",
+          ),
+        },
+        "Invalid table column",
+      ),
+      "Table must have at least one column",
+    )
+    .min(1, "Table must have at least one column")
+    .refine(
+      (val) =>
+        val.map((x) => x.column).length ===
+        new Set(val.map((x) => x.column)).size,
+      "Duplicate table columns detected",
+    ),
+  groupByColumns: z
+    .array(
+      z.object(
+        {
+          column: z.literal(
+            tableWidgetRegularColumns,
+            "Invalid group by column",
+          ),
+        },
+        "Invalid group by column",
+      ),
+    )
+    .refine(
+      (val) =>
+        val.map((x) => x.column).length ===
+        new Set(val.map((x) => x.column)).size,
+      "Duplicate group by columns detected",
+    ),
+});
+
+export type TableWidgetConfig = z.infer<typeof tableWidgetSchema>;
+
 export const widgetConfigSchema = z.discriminatedUnion(
   "type",
-  [barChartSchema, lineChartSchema, pieChartSchema],
+  [barChartSchema, lineChartSchema, pieChartSchema, tableWidgetSchema],
   "Invalid widget type",
 );
 

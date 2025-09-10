@@ -30,6 +30,7 @@ import BarChartConfigForm from "@/components/widget/forms/bar-chart-config-form"
 import FilterListForm from "@/components/widget/forms/filter-list-form";
 import LineChartConfigForm from "@/components/widget/forms/line-chart-config-form";
 import PieChartConfigForm from "@/components/widget/forms/pie-chart-config-form";
+import TableWidgetConfigForm from "@/components/widget/forms/table-widget-config-form";
 import { db } from "@/db";
 import { widgets } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
@@ -184,6 +185,8 @@ export default function UpsertWidgetDialog({
         return <LineChartConfigForm />;
       case "Pie Chart":
         return <PieChartConfigForm />;
+      case "Table":
+        return <TableWidgetConfigForm />;
     }
   }, [selectedWidgetType]);
 
