@@ -65,7 +65,9 @@ export const useUpsertWidgetDialog = create<UpsertWidgetDialogState>()(
 
 const widgetConfigSchemaFull = z.intersection(
   widgetConfigSchema,
-  z.object({ name: z.string() }),
+  z.object({
+    name: z.string("Widget name is required").min(1, "Widget name is required"),
+  }),
 );
 
 export default function UpsertWidgetDialog({
