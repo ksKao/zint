@@ -56,7 +56,7 @@ export default function FilterRow({
   const filterValue = form.watch(`filters.${index}.value` as const);
 
   const filterDateValueDisplay = useMemo(() => {
-    if (selectedField !== "Date") return "";
+    if (selectedField !== "Date" || !filterValue) return "";
 
     if (
       typeof filterValue === "string" &&
