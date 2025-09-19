@@ -15,6 +15,7 @@ import {
 import AggregationSelector from "@/components/widget/forms/aggregation-selector";
 import { WidgetConfig, xAxisOptions } from "@/lib/types/widget.type";
 import { useFormContext } from "react-hook-form";
+import SortBySelector from "./sort-by-selector";
 
 export default function PieChartConfigForm() {
   const form = useFormContext<WidgetConfig>();
@@ -49,6 +50,7 @@ export default function PieChartConfigForm() {
           </FormItem>
         )}
       />
+      <SortBySelector />
     </>
   );
 }

@@ -1,5 +1,6 @@
 import AggregationSelector from "./aggregation-selector";
 import GroupBySelector from "./group-by-selector";
+import SortBySelector from "./sort-by-selector";
 import XAxisSelector from "./x-axis-selector";
 
 export default function LineChartConfigForm() {
@@ -8,6 +9,7 @@ export default function LineChartConfigForm() {
       <XAxisSelector />
       <AggregationSelector />
       <GroupBySelector />
+      <SortBySelector />
     </>
   );
 }

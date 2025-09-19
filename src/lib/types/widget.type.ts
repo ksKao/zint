@@ -170,7 +170,6 @@ const filterSchema = z
 const baseWidgetSchema = z.object({
   type: widgetTypeSchema,
   filters: z.array(filterSchema),
-  sortBy: z.enum(sortByFieldOptions),
   convertToAbsolute: z
     .boolean("Convert to absolute toggle is required")
     .default(false),
@@ -192,6 +191,7 @@ export const barChartSchema = z.object({
     })
     .nullable()
     .default(null),
+  sortBy: z.enum(sortByFieldOptions),
 });
 
 export type BarChartConfig = z.infer<typeof barChartSchema>;
@@ -209,6 +209,7 @@ export const lineChartSchema = z.object({
     })
     .nullable()
     .default(null),
+  sortBy: z.enum(sortByFieldOptions),
 });
 
 export type LineChartConfig = z.infer<typeof lineChartSchema>;
@@ -218,6 +219,7 @@ export const pieChartSchema = z.object({
   type: z.literal(widgetTypeSchema.enum["Pie Chart"]),
   aggregationOption: aggregationOptionSchema,
   groupByField: z.literal(xAxisOptions, "Group by field is required"),
+  sortBy: z.enum(sortByFieldOptions),
 });
 
 export type PieChartConfig = z.infer<typeof pieChartSchema>;
@@ -266,6 +268,20 @@ export const tableWidgetSchema = z.object({
         new Set(val.map((x) => x.column)).size,
       "Duplicate group by columns detected",
     ),
+  sortByColumns: z
+    .array(
+      z.object({
+        column: z.literal(
+          [
+            ...tableWidgetRegularColumns,
+            ...tableWidgetAggregationColumns,
+          ] as const,
+          "Invalid table column",
+        ),
+        order: z.enum(sortByFieldOptions, "Invalid order option"),
+      }),
+    )
+    .default([]),
 });
 
 export type TableWidgetConfig = z.infer<typeof tableWidgetSchema>;

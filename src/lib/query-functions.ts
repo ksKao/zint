@@ -28,8 +28,12 @@ export async function getLineOrBarChartData(
       groupBy: groupBySelect ? sql`ifnull(${groupBySelect}, 'N/A')` : sql`''`,
     },
     filters: config.filters,
-    sortBy: config.sortBy,
-    orderByField: xAxisSelectColumn,
+    orderBy: [
+      {
+        column: xAxisSelectColumn,
+        order: config.sortBy,
+      },
+    ],
   });
 
   const groupByColumns: (SQLiteColumn | SQL)[] = [];

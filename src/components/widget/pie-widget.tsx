@@ -42,8 +42,12 @@ export default function PieWidget({
           ),
         },
         filters: config.filters,
-        orderByField: groupSelectColumn,
-        sortBy: config.sortBy,
+        orderBy: [
+          {
+            column: groupSelectColumn,
+            order: config.sortBy,
+          },
+        ],
       }).groupBy(getXAxisGroupByColumn(config.groupByField));
 
       if (config.limit) query = query.limit(config.limit);

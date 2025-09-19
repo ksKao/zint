@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import LineWidget from "./line-widget";
 import PieWidget from "./pie-widget";
+import TableWidget from "./table-widget";
 
 export default function Widget({
   widget,
@@ -55,6 +56,8 @@ export default function Widget({
         return <LineWidget config={widget.config} layout={widgetLayout} />;
       case "Pie Chart":
         return <PieWidget config={widget.config} layout={widgetLayout} />;
+      case "Table":
+        return <TableWidget config={widget.config} layout={widgetLayout} />;
       default:
         return null;
     }
@@ -103,7 +106,7 @@ export default function Widget({
         </DropdownMenuContent>
       </DropdownMenu>
       <div className="border-b p-2 text-center">{widget.name}</div>
-      <div className="grow p-4">
+      <div className="grow">
         <Suspense>{component}</Suspense>
       </div>
     </div>

@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  sortByFieldOptions,
   tableWidgetAggregationColumns,
   tableWidgetRegularColumns,
   WidgetConfig,
@@ -41,6 +42,10 @@ export default function TableWidgetConfigForm() {
     control: form.control,
     name: "groupByColumns",
   });
+  const sortByColumnValue = useFieldArray({
+    control: form.control,
+    name: "sortByColumns",
+  });
   const formState = useFormState();
   const { invalid: tableColumnsInvalid } = form.getFieldState(
     "tableColumns",
@@ -48,8 +53,8 @@ export default function TableWidgetConfigForm() {
   );
   const { invalid: groupByColumnsInvalid, error: groupByColumnsError } =
     form.getFieldState("groupByColumns", formState);
-
-  console.log(groupByColumnsError);
+  const { invalid: sortByColumnsInvalid, error: sortByColumnsError } =
+    form.getFieldState("sortByColumns", formState);
 
   const remainingColumnOptions = [
     ...tableWidgetRegularColumns,
@@ -59,6 +64,11 @@ export default function TableWidgetConfigForm() {
   const availableGroupByColumns = tableWidgetRegularColumns.filter(
     (c) => !(groupByColumnValue.fields ?? []).find((x) => x.column === c),
   );
+
+  const availableSortByColumns = [
+    ...tableWidgetRegularColumns,
+    ...tableWidgetAggregationColumns,
+  ].filter((x) => !sortByColumnValue.fields.find((y) => y.column === x));
 
   return (
     <>
@@ -217,7 +227,108 @@ export default function TableWidgetConfigForm() {
         </ul>
         {groupByColumnsError?.root?.message ? (
           <FormMessage className="mt-2">
-            {groupByColumnsError?.root?.message}
+            {groupByColumnsError.root.message}
+          </FormMessage>
+        ) : null}
+      </div>
+      <div
+        className={`w-full rounded-md border p-3 ${sortByColumnsInvalid ? "border-destructive" : ""}`}
+      >
+        <div className="flex items-center justify-between">
+          <p className="font-normal">Sort By</p>
+          {availableSortByColumns.length > 0 ? (
+            <Button
+              size="icon"
+              variant="outline"
+              type="button"
+              onClick={() => {
+                sortByColumnValue.append({
+                  column: availableSortByColumns[0],
+                  order: "Ascending",
+                });
+              }}
+            >
+              <Plus />
+            </Button>
+          ) : null}
+        </div>
+        <ul
+          className={`space-y-4 ${sortByColumnValue.fields.length ? "mt-4" : ""}`}
+        >
+          {sortByColumnValue.fields.map((field, i) => (
+            <li key={field.id} className="flex items-center gap-2">
+              <FormField
+                control={form.control}
+                name={`sortByColumns.${i}.column` as const}
+                render={({ field }) => (
+                  <FormItem className="grow">
+                    <FormLabel>Column</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a column" />
+                          </SelectTrigger>
+                        </FormControl>
+                      </div>
+                      <SelectContent>
+                        {[
+                          ...tableWidgetRegularColumns,
+                          ...tableWidgetAggregationColumns,
+                        ].map((col) => (
+                          <SelectItem
+                            value={col}
+                            key={col}
+                            disabled={!availableSortByColumns.includes(col)}
+                          >
+                            {col}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`sortByColumns.${i}.order` as const}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Order</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <SelectTrigger className="w-36">
+                            <SelectValue placeholder="Select an order" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => sortByColumnValue.remove(i)}
+                        >
+                          <XIcon />
+                        </Button>
+                      </div>
+                      <SelectContent>
+                        {sortByFieldOptions.map((col) => (
+                          <SelectItem value={col} key={col}>
+                            {col}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </li>
+          ))}
+        </ul>
+        {sortByColumnsError?.root?.message ? (
+          <FormMessage className="mt-2">
+            {sortByColumnsError.root.message}
           </FormMessage>
         ) : null}
       </div>

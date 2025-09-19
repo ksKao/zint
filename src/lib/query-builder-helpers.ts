@@ -4,6 +4,9 @@ import {
   aggregationOptions,
   groupByFieldOptions,
   presetDateFilters,
+  sortByFieldOptions,
+  tableWidgetAggregationColumns,
+  tableWidgetRegularColumns,
   WidgetConfig,
   xAxisOptions,
 } from "@/lib/types/widget.type";
@@ -33,13 +36,14 @@ export const selectYearSql = sql`strftime('%Y', ${transactions.date}, 'unixepoch
 export function getSelectTransactionQuery({
   select,
   filters,
-  sortBy,
-  orderByField,
+  orderBy,
 }: {
   select: Parameters<typeof db.select>[0];
   filters: WidgetConfig["filters"];
-  sortBy: WidgetConfig["sortBy"];
-  orderByField: SQLiteColumn | SQL;
+  orderBy: {
+    order: (typeof sortByFieldOptions)[number];
+    column: SQLiteColumn | SQL | SQL.Aliased;
+  }[];
 }) {
   let query = db
     .select(select)
@@ -50,11 +54,13 @@ export function getSelectTransactionQuery({
 
   query = handleFilters(query, filters);
 
-  query = query.orderBy(
-    sortBy === "Ascending"
-      ? sql`${orderByField} asc nulls last`
-      : sql`${orderByField} desc nulls last`,
-  );
+  for (const element of orderBy) {
+    query = query.orderBy(
+      element.order === "Ascending"
+        ? sql`${element.column} asc nulls last`
+        : sql`${element.column} desc nulls last`,
+    );
+  }
 
   return query;
 }
@@ -212,7 +218,6 @@ export function handleFilters<T extends SQLiteSelect>(
               targetDate.setDate(1);
           }
           filterValue = targetDate;
-          console.log("filter value", filterValue);
         } else if (typeof filter.value === "number") {
           const targetDate = new Date();
           targetDate.setDate(targetDate.getDate() - filter.value);
@@ -245,4 +250,64 @@ export function handleFilters<T extends SQLiteSelect>(
   }
 
   return qb;
+}
+
+export function getTableWidgetSelectColumn(
+  tableColumn:
+    | (typeof tableWidgetRegularColumns)[number]
+    | (typeof tableWidgetAggregationColumns)[number],
+): SQLiteColumn | SQL | SQL.Aliased {
+  switch (tableColumn) {
+    case "Count":
+    case "Average":
+    case "Min":
+    case "Max":
+    case "Sum":
+      return getTransactionAggregationOptionSelect(tableColumn, false);
+    case "Description":
+      return transactions.description;
+    case "Balance":
+      return transactions.balance;
+    case "Title":
+      return transactions.title;
+    case "Amount":
+      return transactions.amount;
+    case "Day":
+      return transactions.date;
+    case "Category":
+      return sql`${categories.name}`.as("Category");
+    case "Subcategory":
+      return sql`${subCategories.name}`.as("Subcategory");
+    default:
+      return getTransactionXAxisSelectColumn(tableColumn);
+  }
+}
+
+export function getTableWidgetGroupByColumn(
+  column: (typeof tableWidgetRegularColumns)[number],
+): SQLiteColumn | SQL {
+  switch (column) {
+    case "Category":
+      return transactions.categoryId;
+    case "Subcategory":
+      return transactions.subCategoryId;
+    case "Description":
+      return transactions.description;
+    case "Balance":
+      return transactions.balance;
+    case "Title":
+      return transactions.title;
+    case "Amount":
+      return transactions.amount;
+    case "Day":
+      return transactions.date;
+    case "Date":
+      return transactions.date;
+    case "Month":
+      return selectMonthSql;
+    case "Year":
+      return selectYearSql;
+    case "Payee":
+      return transactions.payee;
+  }
 }

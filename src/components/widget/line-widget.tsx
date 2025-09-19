@@ -34,7 +34,7 @@ export default function LineWidget({
   });
 
   return (
-    <div className="h-full max-h-full w-full max-w-full">
+    <div className="h-full max-h-full w-full max-w-full p-4">
       <ChartContainer
         config={data.keys.reduce((prev, curr) => {
           prev[curr] = { label: curr };
