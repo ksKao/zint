@@ -7,17 +7,15 @@ import {
 import { getLineOrBarChartData } from "@/lib/query-functions";
 import { queryKeys } from "@/lib/query-keys";
 import type { BarChartConfig } from "@/lib/types/widget.type";
-import { ROW_HEIGHT } from "@/routes/$accountId/_layout";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import ReactGridLayout from "react-grid-layout";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 export default function BarWidget({
   config,
-  layout,
+  height,
 }: {
   config: BarChartConfig;
-  layout: ReactGridLayout.Layout;
+  height: number;
 }) {
   const { data } = useSuspenseQuery({
     queryKey: [queryKeys.transaction, config],
@@ -34,7 +32,7 @@ export default function BarWidget({
           return prev;
         }, {} as ChartConfig)}
         className="w-full"
-        style={{ height: Math.max(ROW_HEIGHT * layout.h - 41, 1) }} // 41 is the height of the header
+        style={{ height: height - 32 }} // -32 for the padding
       >
         <BarChart accessibilityLayer data={data.values}>
           <CartesianGrid vertical={false} />

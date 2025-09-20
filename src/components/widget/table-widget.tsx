@@ -13,15 +13,15 @@ import {
 } from "@/lib/query-builder-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { TableWidgetConfig } from "@/lib/types/widget.type";
-import { ROW_HEIGHT } from "@/routes/$accountId/_layout";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 
 export default function TableWidget({
   config,
-  layout,
+  height,
 }: {
   config: TableWidgetConfig;
-  layout: ReactGridLayout.Layout;
+  height: number;
 }) {
   const { data } = useSuspenseQuery({
     queryKey: [queryKeys.transaction, config],
@@ -54,12 +54,30 @@ export default function TableWidget({
     },
   });
 
+  function formatValue(
+    value: unknown,
+    col: TableWidgetConfig["tableColumns"][number]["column"],
+  ) {
+    switch (col) {
+      case "Sum":
+      case "Average":
+      case "Min":
+      case "Max":
+        return Number(value).toFixed(2);
+      case "Day":
+        return format(new Date(Number(value) * 1000), "dd MMM yyyy");
+      case "Date":
+        return format(new Date(String(value)), "dd MMM yyyy");
+      default:
+        return value ? String(value) : "--";
+    }
+  }
+
+  console.log("data", data);
+
   return (
     <div className="h-full w-full">
-      <div
-        className="relative w-full overflow-x-auto"
-        style={{ height: layout.h * ROW_HEIGHT - 41 }}
-      >
+      <div className="relative w-full overflow-x-auto" style={{ height }}>
         <Table>
           <TableHeader className="bg-card sticky top-0">
             <TableRow>
@@ -75,7 +93,10 @@ export default function TableWidget({
               <TableRow key={i}>
                 {Object.keys(row).map((col) => (
                   <TableCell key={col} className="text-center">
-                    {row[col] === null ? "-" : String(row[col])}
+                    {formatValue(
+                      row[col],
+                      col as unknown as TableWidgetConfig["tableColumns"][number]["column"],
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

@@ -273,7 +273,7 @@ export function getTableWidgetSelectColumn(
     case "Amount":
       return transactions.amount;
     case "Day":
-      return transactions.date;
+      return sql`${transactions.date}`.as("Day");
     case "Category":
       return sql`${categories.name}`.as("Category");
     case "Subcategory":

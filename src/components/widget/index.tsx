@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit2Icon, EllipsisIcon, Loader2Icon, TrashIcon } from "lucide-react";
 import { useUpsertWidgetDialog } from "@/components/dialog-forms/upsert-widget-dialog";
-import { useLocalDashboardLayout } from "@/routes/$accountId/_layout";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db";
 import { toast } from "sonner";
@@ -19,6 +18,7 @@ import { queryKeys } from "@/lib/query-keys";
 import LineWidget from "./line-widget";
 import PieWidget from "./pie-widget";
 import TableWidget from "./table-widget";
+import { useMeasure } from "react-use";
 
 export default function Widget({
   widget,
@@ -27,7 +27,7 @@ export default function Widget({
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { setOpen, setEditingWidget } = useUpsertWidgetDialog();
-  const { tempLayout } = useLocalDashboardLayout();
+  const [ref, { height }] = useMeasure<HTMLDivElement>();
   const queryClient = useQueryClient();
   const { mutate: deleteWidget, isPending: deleteWidgetPending } = useMutation({
     mutationFn: async () => {
@@ -45,26 +45,35 @@ export default function Widget({
     },
   });
   const component = useMemo(() => {
-    const widgetLayout = tempLayout.find((w) => w.i === widget.id);
-
-    if (!widgetLayout) return null;
+    const heightWithoutHeader = height - 41;
 
     switch (widget.config.type) {
       case "Bar Chart":
-        return <BarWidget config={widget.config} layout={widgetLayout} />;
+        return (
+          <BarWidget config={widget.config} height={heightWithoutHeader} />
+        );
       case "Line Chart":
-        return <LineWidget config={widget.config} layout={widgetLayout} />;
+        return (
+          <LineWidget config={widget.config} height={heightWithoutHeader} />
+        );
       case "Pie Chart":
-        return <PieWidget config={widget.config} layout={widgetLayout} />;
+        return (
+          <PieWidget config={widget.config} height={heightWithoutHeader} />
+        );
       case "Table":
-        return <TableWidget config={widget.config} layout={widgetLayout} />;
+        return (
+          <TableWidget config={widget.config} height={heightWithoutHeader} />
+        );
       default:
         return null;
     }
-  }, [widget, tempLayout]);
+  }, [widget, height]);
 
   return (
-    <div className="bg-card relative flex h-full w-full flex-col rounded-md border">
+    <div
+      className="bg-card relative flex h-full w-full flex-col rounded-md border"
+      ref={ref}
+    >
       <DropdownMenu
         modal={false}
         open={dropdownOpen}

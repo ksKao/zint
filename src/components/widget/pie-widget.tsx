@@ -14,17 +14,16 @@ import {
 } from "@/lib/query-builder-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { PieChartConfig } from "@/lib/types/widget.type";
-import { ROW_HEIGHT } from "@/routes/$accountId/_layout";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { sql } from "drizzle-orm";
 import { Pie, PieChart } from "recharts";
 
 export default function PieWidget({
   config,
-  layout,
+  height,
 }: {
   config: PieChartConfig;
-  layout: ReactGridLayout.Layout;
+  height: number;
 }) {
   const { data } = useSuspenseQuery({
     queryKey: [queryKeys.transaction, config],
@@ -83,7 +82,7 @@ export default function PieWidget({
           ).obj
         }
         className="w-full"
-        style={{ height: Math.max(ROW_HEIGHT * layout.h - 41, 1) }} // 41 is the height of the header
+        style={{ height }}
       >
         <PieChart>
           <ChartTooltip
