@@ -141,13 +141,20 @@ export default function TableWidgetConfigForm() {
                         id: item.column,
                       }))}
                     >
-                      {tableColumnsValue.fields.map((col) => (
+                      {tableColumnsValue.fields.map((col, i) => (
                         <SortableItem
                           id={col.column}
                           key={col.column}
-                          className="hover:bg-primary/30 cursor-pointer rounded-md px-2 py-1"
+                          className="hover:bg-primary/30 group rounded-md py-1"
                         >
                           {col.column}
+                          <button
+                            type="button"
+                            className="mr-2 ml-auto hidden cursor-pointer group-hover:inline-block"
+                            onMouseDown={() => tableColumnsValue.remove(i)} // use onMouseDown here because onClick is blocked by sortable
+                          >
+                            <XIcon size={16} />
+                          </button>
                         </SortableItem>
                       ))}
                     </SortableContext>

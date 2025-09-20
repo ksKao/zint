@@ -73,8 +73,6 @@ export default function TableWidget({
     }
   }
 
-  console.log("data", data);
-
   return (
     <div className="h-full w-full">
       <div className="relative w-full overflow-x-auto" style={{ height }}>
