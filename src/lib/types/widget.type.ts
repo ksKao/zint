@@ -167,16 +167,17 @@ const filterSchema = z
   )
   .and(baseFilterSchema);
 
+const limitSchema = z
+  .number("Limit is invalid")
+  .min(0, "Limit cannot be negative")
+  .default(0);
+
 const baseWidgetSchema = z.object({
   type: widgetTypeSchema,
   filters: z.array(filterSchema),
   convertToAbsolute: z
     .boolean("Convert to absolute toggle is required")
     .default(false),
-  limit: z
-    .number("Limit is invalid")
-    .min(0, "Limit cannot be negative")
-    .default(0),
 });
 
 export const barChartSchema = z.object({
@@ -192,6 +193,7 @@ export const barChartSchema = z.object({
     .nullable()
     .default(null),
   sortBy: z.enum(sortByFieldOptions),
+  limit: limitSchema,
 });
 
 export type BarChartConfig = z.infer<typeof barChartSchema>;
@@ -210,6 +212,7 @@ export const lineChartSchema = z.object({
     .nullable()
     .default(null),
   sortBy: z.enum(sortByFieldOptions),
+  limit: limitSchema,
 });
 
 export type LineChartConfig = z.infer<typeof lineChartSchema>;
@@ -220,6 +223,7 @@ export const pieChartSchema = z.object({
   aggregationOption: aggregationOptionSchema,
   groupByField: z.literal(xAxisOptions, "Group by field is required"),
   sortBy: z.enum(sortByFieldOptions),
+  limit: limitSchema,
 });
 
 export type PieChartConfig = z.infer<typeof pieChartSchema>;
@@ -276,19 +280,38 @@ export const tableWidgetSchema = z.object({
             ...tableWidgetRegularColumns,
             ...tableWidgetAggregationColumns,
           ] as const,
-          "Invalid table column",
+          "Invalid column",
         ),
         order: z.enum(sortByFieldOptions, "Invalid order option"),
       }),
     )
     .default([]),
+  limit: limitSchema,
 });
 
 export type TableWidgetConfig = z.infer<typeof tableWidgetSchema>;
 
+export const cardWidgetSchema = z.object({
+  ...baseWidgetSchema.shape,
+  type: z.literal(widgetTypeSchema.enum["Card"]),
+  displayValue: z.literal(
+    [...tableWidgetRegularColumns, ...tableWidgetAggregationColumns] as const,
+    "Invalid display value",
+  ),
+  sortByColumns: tableWidgetSchema.shape.sortByColumns,
+});
+
+export type CardWidgetConfig = z.infer<typeof cardWidgetSchema>;
+
 export const widgetConfigSchema = z.discriminatedUnion(
   "type",
-  [barChartSchema, lineChartSchema, pieChartSchema, tableWidgetSchema],
+  [
+    barChartSchema,
+    lineChartSchema,
+    pieChartSchema,
+    tableWidgetSchema,
+    cardWidgetSchema,
+  ],
   "Invalid widget type",
 );
 

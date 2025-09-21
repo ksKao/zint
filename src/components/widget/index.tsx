@@ -1,24 +1,25 @@
-import { widgets } from "@/db/schema";
-import { eq, InferSelectModel } from "drizzle-orm";
-import { Suspense, useMemo, useState } from "react";
-import BarWidget from "@/components/widget/bar-widget";
+import { useUpsertWidgetDialog } from "@/components/dialog-forms/upsert-widget-dialog";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Edit2Icon, EllipsisIcon, Loader2Icon, TrashIcon } from "lucide-react";
-import { useUpsertWidgetDialog } from "@/components/dialog-forms/upsert-widget-dialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import BarWidget from "@/components/widget/bar-widget";
 import { db } from "@/db";
-import { toast } from "sonner";
+import { widgets } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { eq, InferSelectModel } from "drizzle-orm";
+import { Edit2Icon, EllipsisIcon, Loader2Icon, TrashIcon } from "lucide-react";
+import { Suspense, useMemo, useState } from "react";
+import { useMeasure } from "react-use";
+import { toast } from "sonner";
+import CardWidget from "./card-widget";
 import LineWidget from "./line-widget";
 import PieWidget from "./pie-widget";
 import TableWidget from "./table-widget";
-import { useMeasure } from "react-use";
 
 export default function Widget({
   widget,
@@ -63,6 +64,10 @@ export default function Widget({
       case "Table":
         return (
           <TableWidget config={widget.config} height={heightWithoutHeader} />
+        );
+      case "Card":
+        return (
+          <CardWidget config={widget.config} height={heightWithoutHeader} />
         );
       default:
         return null;

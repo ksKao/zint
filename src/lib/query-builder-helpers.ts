@@ -11,14 +11,17 @@ import {
   xAxisOptions,
 } from "@/lib/types/widget.type";
 import {
+  and,
   avg,
   Column,
   count,
   eq,
   gt,
+  gte,
   inArray,
   like,
   lt,
+  lte,
   max,
   min,
   not,
@@ -149,11 +152,13 @@ function getOperatorFunction(
     case "Equals":
       return eq(column, value);
     case "Greater Than":
-    case "After":
       return gt(column, value);
+    case "After":
+      return gte(column, value);
     case "Less Than":
-    case "Before":
       return lt(column, value);
+    case "Before":
+      return lte(column, value);
     case "Includes":
       return like(column, value.toString());
     case "One Of": {
@@ -175,6 +180,7 @@ export function handleFilters<T extends SQLiteSelect>(
   qb: T,
   filters: WidgetConfig["filters"],
 ): T {
+  const conditions: SQL<unknown>[] = [];
   for (const filter of filters) {
     let column: Column;
     let filterValue = filter.value;
@@ -246,8 +252,10 @@ export function handleFilters<T extends SQLiteSelect>(
 
     if (filter.reverseFilter) operatorFunction = not(operatorFunction);
 
-    qb = qb.where(operatorFunction);
+    conditions.push(operatorFunction);
   }
+
+  qb = qb.where(and(...conditions, eq(transactions.isTemporary, false)));
 
   return qb;
 }
@@ -256,6 +264,7 @@ export function getTableWidgetSelectColumn(
   tableColumn:
     | (typeof tableWidgetRegularColumns)[number]
     | (typeof tableWidgetAggregationColumns)[number],
+  convertToAbsolute: boolean,
 ): SQLiteColumn | SQL | SQL.Aliased {
   switch (tableColumn) {
     case "Count":
@@ -263,7 +272,10 @@ export function getTableWidgetSelectColumn(
     case "Min":
     case "Max":
     case "Sum":
-      return getTransactionAggregationOptionSelect(tableColumn, false);
+      return getTransactionAggregationOptionSelect(
+        tableColumn,
+        convertToAbsolute,
+      );
     case "Description":
       return transactions.description;
     case "Balance":

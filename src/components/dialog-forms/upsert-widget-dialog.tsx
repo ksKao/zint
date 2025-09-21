@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import BarChartConfigForm from "@/components/widget/forms/bar-chart-config-form";
+import CardWidgetConfigForm from "@/components/widget/forms/card-widget-config-form";
 import FilterListForm from "@/components/widget/forms/filter-list-form";
 import LineChartConfigForm from "@/components/widget/forms/line-chart-config-form";
 import PieChartConfigForm from "@/components/widget/forms/pie-chart-config-form";
@@ -186,6 +187,8 @@ export default function UpsertWidgetDialog({
         return <PieChartConfigForm />;
       case "Table":
         return <TableWidgetConfigForm />;
+      case "Card":
+        return <CardWidgetConfigForm />;
     }
   }, [selectedWidgetType]);
 
@@ -238,22 +241,6 @@ export default function UpsertWidgetDialog({
             />
             {chartSpecificFields}
             <FilterListForm />
-            <FormField
-              control={form.control}
-              name="limit"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Limit</FormLabel>
-                  <Input
-                    placeholder="Limit"
-                    type="number"
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="convertToAbsolute"

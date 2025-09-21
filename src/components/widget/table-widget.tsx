@@ -30,14 +30,23 @@ export default function TableWidget({
         {};
 
       for (const { column } of config.tableColumns) {
-        select = { ...select, [column]: getTableWidgetSelectColumn(column) };
+        select = {
+          ...select,
+          [column]: getTableWidgetSelectColumn(
+            column,
+            config.convertToAbsolute,
+          ),
+        };
       }
 
       let query = getSelectTransactionQuery({
         filters: config.filters,
         select,
         orderBy: config.sortByColumns.map((x) => ({
-          column: getTableWidgetSelectColumn(x.column),
+          column: getTableWidgetSelectColumn(
+            x.column,
+            config.convertToAbsolute,
+          ),
           order: x.order,
         })),
       });
