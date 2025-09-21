@@ -9,6 +9,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
+import { PencilIcon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import GridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
@@ -96,6 +97,26 @@ function Index() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">
+          {editMode ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setLayout(
+                  widgets.map((widget) => ({
+                    i: widget.id,
+                    x: widget.x,
+                    y: widget.y,
+                    w: widget.width,
+                    h: widget.height,
+                  })),
+                );
+                setEditMode(false);
+              }}
+            >
+              <XIcon />
+              Cancel
+            </Button>
+          ) : null}
           <Button
             loading={saveLayoutPending}
             onClick={() => {
@@ -106,6 +127,7 @@ function Index() {
               }
             }}
           >
+            {editMode ? <SaveIcon /> : <PencilIcon />}
             {editMode ? "Save" : "Edit"} Layout
           </Button>
           <Button
@@ -114,6 +136,7 @@ function Index() {
               setOpen(true);
             }}
           >
+            <PlusIcon />
             Add Widget
           </Button>
         </div>
