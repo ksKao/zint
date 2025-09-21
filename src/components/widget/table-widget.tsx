@@ -29,7 +29,10 @@ export default function TableWidget({
       let select: Parameters<typeof getSelectTransactionQuery>[0]["select"] =
         {};
 
-      for (const { column } of config.tableColumns) {
+      for (const { column } of [
+        ...config.tableColumns,
+        ...config.sortByColumns,
+      ]) {
         select = {
           ...select,
           [column]: getTableWidgetSelectColumn(
@@ -98,11 +101,11 @@ export default function TableWidget({
           <TableBody>
             {data.map((row, i) => (
               <TableRow key={i}>
-                {Object.keys(row).map((col) => (
-                  <TableCell key={col} className="text-center">
+                {config.tableColumns.map((col) => (
+                  <TableCell key={col.column} className="text-center">
                     {formatValue(
-                      row[col],
-                      col as unknown as TableWidgetConfig["tableColumns"][number]["column"],
+                      row[col.column],
+                      col.column as unknown as TableWidgetConfig["tableColumns"][number]["column"],
                     )}
                   </TableCell>
                 ))}

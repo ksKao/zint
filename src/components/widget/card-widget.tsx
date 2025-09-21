@@ -16,7 +16,25 @@ export default function CardWidget({
   const { data } = useSuspenseQuery({
     queryKey: [queryKeys.transaction, config],
     queryFn: async () => {
+      let select: Parameters<typeof getSelectTransactionQuery>[0]["select"] = {
+        value: getTableWidgetSelectColumn(
+          config.displayValue,
+          config.convertToAbsolute,
+        ),
+      };
+
+      for (const col of config.sortByColumns) {
+        select = {
+          ...select,
+          [col.column]: getTableWidgetSelectColumn(
+            col.column,
+            config.convertToAbsolute,
+          ),
+        };
+      }
+
       let query = getSelectTransactionQuery({
+        select,
         filters: config.filters,
         orderBy: config.sortByColumns.map((x) => ({
           column: getTableWidgetSelectColumn(
@@ -25,12 +43,6 @@ export default function CardWidget({
           ),
           order: x.order,
         })),
-        select: {
-          value: getTableWidgetSelectColumn(
-            config.displayValue,
-            config.convertToAbsolute,
-          ),
-        },
       });
 
       query = query.limit(1);
