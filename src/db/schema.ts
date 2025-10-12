@@ -53,10 +53,10 @@ export const transactions = sqliteTable(
     balance: real("balance").notNull(),
     order: integer("order").notNull(),
     categoryId: text("category_id").references(() => categories.id, {
-      onDelete: "cascade",
+      onDelete: "set null",
     }),
     subCategoryId: text("sub_category_id").references(() => subCategories.id, {
-      onDelete: "cascade",
+      onDelete: "set null",
     }),
     accountId: text("account_id")
       .references(() => accounts.id, { onDelete: "cascade" })

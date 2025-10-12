@@ -6,7 +6,7 @@ pub fn load_migrations() -> Vec<Migration> {
         Migration {
             version: 1,
             description: "init",
-            sql: include_str!("../migrations/0000_worried_mockingbird.sql"),
+            sql: include_str!("../migrations/0000_illegal_vance_astro.sql"),
             kind: MigrationKind::Up,
         },
     ];
