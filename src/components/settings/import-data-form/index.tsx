@@ -66,7 +66,7 @@ const transactionSchema = z.object({
   description: z.string().nullish(),
   date: z.coerce.date(),
   payee: z.string().nullish(),
-  isTemporary: z.coerce.boolean(),
+  isTemporary: z.stringbool(),
   amount: z.number(),
   categoryId: z.cuid2().min(1).nullish(),
   subCategoryId: z.cuid2().min(1).nullish(),

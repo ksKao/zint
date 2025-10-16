@@ -1,5 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ImportDataForm from "./import-data-form/index";
+import { Suspense } from "react";
+import ExportDataForm from "./export-data-form";
 
 export default function SettingsPage() {
   return (
@@ -8,10 +10,16 @@ export default function SettingsPage() {
       <Tabs className="my-4" defaultValue="import">
         <TabsList>
           <TabsTrigger value="import">Import</TabsTrigger>
+          <TabsTrigger value="export">Export</TabsTrigger>
         </TabsList>
-        <TabsContent value="import">
-          <ImportDataForm />
-        </TabsContent>
+        <Suspense>
+          <TabsContent value="import">
+            <ImportDataForm />
+          </TabsContent>
+          <TabsContent value="export">
+            <ExportDataForm />
+          </TabsContent>
+        </Suspense>
       </Tabs>
     </div>
   );
