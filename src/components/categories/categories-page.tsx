@@ -1,7 +1,22 @@
 import CategoryIcon from "@/components/category/category-icon";
 import Draggable from "@/components/dnd/draggable";
 import Droppable from "@/components/dnd/droppable";
-import { Item, ItemContent, ItemMedia } from "@/components/ui/item";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemMedia,
+} from "@/components/ui/item";
 import { db } from "@/db";
 import {
   categories as categoryTable,
@@ -9,32 +24,75 @@ import {
   transactions,
 } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
-import { DndContext } from "@dnd-kit/core";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
+import { Trash2Icon } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 function CategoryItem({
   category,
+  setDeletingCategory,
+  setConfirmDeleteDialogOpen,
 }: {
-  category: typeof categoryTable.$inferSelect;
+  category: typeof categoryTable.$inferSelect & {
+    subCategories: (typeof subCategories.$inferSelect)[];
+  };
+  setDeletingCategory: React.Dispatch<
+    React.SetStateAction<typeof categoryTable.$inferSelect | undefined>
+  >;
+  setConfirmDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   return (
-    <Item variant="outline" className="cursor-grab">
+    <Item
+      variant="outline"
+      className={`${category.subCategories.length ? "" : "cursor-grab"}`}
+    >
       <ItemMedia>
         <CategoryIcon category={category} />
       </ItemMedia>
       <ItemContent>{category.name}</ItemContent>
+      <ItemActions>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => {
+            setDeletingCategory(category);
+            setConfirmDeleteDialogOpen(true);
+          }}
+        >
+          <Trash2Icon size={16} />
+        </Button>
+      </ItemActions>
     </Item>
   );
 }
 
 export default function CategoriesPage({ accountId }: { accountId: string }) {
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      delay: 100,
+      distance: 0,
+    },
+  });
+  const keyboardSensor = useSensor(KeyboardSensor);
+  const sensors = useSensors(pointerSensor, keyboardSensor);
   const queryClient = useQueryClient();
+  const [deletingCategory, setDeletingCategory] = useState<
+    typeof categoryTable.$inferSelect | typeof subCategories.$inferSelect
+  >();
+  const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
   const { data: categories } = useSuspenseQuery({
     queryKey: [queryKeys.category, accountId],
     queryFn: async () => {
@@ -84,7 +142,7 @@ export default function CategoriesPage({ accountId }: { accountId: string }) {
       await queryClient.invalidateQueries();
     },
     onError: () => {
-      toast.error("An unexpected error occured");
+      toast.error("An unexpected error occurred");
     },
   });
   const {
@@ -116,7 +174,7 @@ export default function CategoriesPage({ accountId }: { accountId: string }) {
       await queryClient.invalidateQueries();
     },
     onError: () => {
-      toast.error("An unexpected error occured");
+      toast.error("An unexpected error occurred");
     },
   });
   const { mutate: ungroupSubcategory, isPending: ungroupSubcategoryPending } =
@@ -149,108 +207,208 @@ export default function CategoriesPage({ accountId }: { accountId: string }) {
         await queryClient.invalidateQueries();
       },
       onError: () => {
-        toast.error("An unexpected error occured");
+        toast.error("An unexpected error occurred");
+      },
+    });
+  const { mutate: deleteCategory, isPending: deleteCategoryPending } =
+    useMutation({
+      mutationFn: async ({
+        categoryId,
+        subCategoryId,
+      }: {
+        categoryId: string;
+        subCategoryId?: string;
+      }) => {
+        if (subCategoryId) {
+          await db
+            .delete(subCategories)
+            .where(eq(subCategories.id, subCategoryId));
+        } else {
+          await db
+            .delete(categoryTable)
+            .where(eq(categoryTable.id, categoryId));
+        }
+      },
+      onSuccess: async () => {
+        await queryClient.invalidateQueries();
+        setDeletingCategory(undefined);
+        setConfirmDeleteDialogOpen(false);
+        toast.success("Category has been deleted");
+      },
+      onError: () => {
+        toast.error("Unable to delete category");
       },
     });
 
   return (
-    <div className="w-full px-4 py-8">
-      <h1 className="text-2xl font-bold">Categories</h1>
-      <div className="my-4 space-y-2">
-        <DndContext
-          onDragEnd={(e) => {
-            const { active, over } = e;
-
-            const activeIdSplit = active.id.toString().split("-");
-            const draggedCategoryId = activeIdSplit[0];
-            const draggedSubCategoryId = activeIdSplit[1];
-
-            if (!over) {
-              if (!draggedCategoryId || !draggedSubCategoryId) return;
-
-              const category = categories.find(
-                (c) => c.id === draggedCategoryId,
-              );
-
-              if (!category) return;
-
-              const subCategory = category.subCategories.find(
-                (s) => s.id === draggedSubCategoryId,
-              );
-
-              if (!subCategory) return;
-
-              ungroupSubcategory({ subCategory });
-            } else {
-              if (draggedSubCategoryId) {
-                moveSubcategoryToCategory({
-                  categoryId: over.id.toString(),
-                  subCategoryId: draggedSubCategoryId,
-                });
-              } else if (draggedCategoryId) {
-                const oldCategory = categories.find(
-                  (c) => c.id === draggedCategoryId,
-                );
-
-                if (!oldCategory) {
+    <>
+      <AlertDialog
+        open={confirmDeleteDialogOpen}
+        onOpenChange={setConfirmDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
+            <AlertDialogDescription className="sr-only">
+              Confirm Delete
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          Are you sure you want to delete {deletingCategory?.name}?
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              loading={deleteCategoryPending}
+              onClick={() => {
+                if (!deletingCategory) {
                   toast.error("An unexpected error occurred.");
                   return;
                 }
 
-                moveCategoryToCategory({
-                  oldCategory,
-                  newCategoryId: over.id.toString(),
-                });
-              } else {
-                toast.error("An unexpected error occurred.");
-                return;
-              }
-            }
-          }}
-        >
-          {categories
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((category) => (
-              <Droppable
-                id={category.id}
-                key={category.id}
-                disabled={
-                  moveCategoryToCategoryPending ||
-                  moveSubcategoryToCategoryPending ||
-                  ungroupSubcategoryPending
+                if ("categoryId" in deletingCategory) {
+                  deleteCategory({
+                    categoryId: deletingCategory.categoryId,
+                    subCategoryId: deletingCategory.id,
+                  });
+                } else {
+                  deleteCategory({
+                    categoryId: deletingCategory.id,
+                  });
                 }
-                render={({ isOver }) => (
-                  <div className={`${isOver ? "border-primary border" : ""}`}>
-                    {category.subCategories.length ? (
-                      <CategoryItem category={category} />
-                    ) : (
-                      <Draggable id={category.id} className="w-full">
-                        <CategoryItem category={category} />
-                      </Draggable>
-                    )}
-                    {category.subCategories.length ? (
-                      <div className="ml-8">
-                        {category.subCategories.map((subcategory) => (
-                          <Draggable
-                            key={subcategory.id}
-                            id={`${category.id}-${subcategory.id}`}
-                          >
-                            <Item variant="outline" className="rounded-none">
-                              <ItemMedia>
-                                <CategoryIcon category={subcategory} />
-                              </ItemMedia>
-                              <ItemContent>{subcategory.name}</ItemContent>
-                            </Item>
-                          </Draggable>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-              />
-            ))}
-        </DndContext>
+              }}
+            >
+              Confirm
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <div className="w-full px-4 py-8">
+        <h1 className="text-2xl font-bold">Categories</h1>
+        <div className="my-4 space-y-2">
+          <DndContext
+            sensors={sensors}
+            onDragEnd={(e) => {
+              const { active, over } = e;
+
+              if (active.id === over?.id) return;
+
+              const activeIdSplit = active.id.toString().split("-");
+              const draggedCategoryId = activeIdSplit[0];
+              const draggedSubCategoryId = activeIdSplit[1];
+
+              if (!over) {
+                if (!draggedCategoryId || !draggedSubCategoryId) return;
+
+                const category = categories.find(
+                  (c) => c.id === draggedCategoryId,
+                );
+
+                if (!category) return;
+
+                const subCategory = category.subCategories.find(
+                  (s) => s.id === draggedSubCategoryId,
+                );
+
+                if (!subCategory) return;
+
+                ungroupSubcategory({ subCategory });
+              } else {
+                if (draggedSubCategoryId) {
+                  moveSubcategoryToCategory({
+                    categoryId: over.id.toString(),
+                    subCategoryId: draggedSubCategoryId,
+                  });
+                } else if (draggedCategoryId) {
+                  const oldCategory = categories.find(
+                    (c) => c.id === draggedCategoryId,
+                  );
+
+                  if (!oldCategory) {
+                    toast.error("An unexpected error occurred.");
+                    return;
+                  }
+
+                  moveCategoryToCategory({
+                    oldCategory,
+                    newCategoryId: over.id.toString(),
+                  });
+                } else {
+                  toast.error("An unexpected error occurred.");
+                  return;
+                }
+              }
+            }}
+          >
+            {categories
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((category) => (
+                <Droppable
+                  id={category.id}
+                  key={category.id}
+                  disabled={
+                    moveCategoryToCategoryPending ||
+                    moveSubcategoryToCategoryPending ||
+                    ungroupSubcategoryPending
+                  }
+                  render={({ isOver }) => (
+                    <div className={`${isOver ? "border-primary border" : ""}`}>
+                      {category.subCategories.length ? (
+                        <CategoryItem
+                          category={category}
+                          setDeletingCategory={setDeletingCategory}
+                          setConfirmDeleteDialogOpen={
+                            setConfirmDeleteDialogOpen
+                          }
+                        />
+                      ) : (
+                        <Draggable id={category.id} className="w-full">
+                          <CategoryItem
+                            category={category}
+                            setDeletingCategory={setDeletingCategory}
+                            setConfirmDeleteDialogOpen={
+                              setConfirmDeleteDialogOpen
+                            }
+                          />
+                        </Draggable>
+                      )}
+                      {category.subCategories.length ? (
+                        <div className="ml-8">
+                          {category.subCategories.map((subcategory) => (
+                            <Draggable
+                              key={subcategory.id}
+                              id={`${category.id}-${subcategory.id}`}
+                              className="cursor-grab"
+                            >
+                              <Item variant="outline" className="rounded-none">
+                                <ItemMedia>
+                                  <CategoryIcon category={subcategory} />
+                                </ItemMedia>
+                                <ItemContent>{subcategory.name}</ItemContent>
+                                <ItemActions>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setDeletingCategory(subcategory);
+                                      setConfirmDeleteDialogOpen(true);
+                                    }}
+                                  >
+                                    <Trash2Icon size={16} />
+                                  </Button>
+                                </ItemActions>
+                              </Item>
+                            </Draggable>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                />
+              ))}
+          </DndContext>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
