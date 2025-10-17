@@ -1,3 +1,4 @@
+import CategoriesPage from "@/components/categories/categories-page";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/$accountId/_layout/categories")({
@@ -5,5 +6,7 @@ export const Route = createFileRoute("/$accountId/_layout/categories")({
 });
 
 function RouteComponent() {
-  return <div>Categories</div>;
+  const { accountId } = Route.useParams();
+
+  return <CategoriesPage accountId={accountId} />;
 }

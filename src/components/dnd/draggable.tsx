@@ -2,13 +2,17 @@ import { useDraggable } from "@dnd-kit/core";
 
 type Props = {
   id: string;
-} & React.ComponentProps<"button">;
+  disabled?: boolean;
+} & React.ComponentProps<"div">;
 
-export default function Draggable({ id, style, ...rest }: Props) {
-  const { setNodeRef, transform, listeners, attributes } = useDraggable({ id });
+export default function Draggable({ id, style, disabled, ...rest }: Props) {
+  const { setNodeRef, transform, listeners, attributes } = useDraggable({
+    id,
+    disabled,
+  });
 
   return (
-    <button
+    <div
       ref={setNodeRef}
       style={{
         ...style,
