@@ -1,4 +1,4 @@
-import AddAccountDialog from "@/components/dialog-forms/add-account-dialog";
+import UpsertAccountDialog from "@/components/dialog-forms/upsert-account-dialog";
 import Navbar from "@/components/navbar";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { Toaster } from "sonner";
@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 export const Route = createRootRoute({
   component: () => (
     <div className="flex h-screen w-screen">
-      <AddAccountDialog />
+      <UpsertAccountDialog />
       <Navbar />
       <main className="grow overflow-y-auto">
         <Outlet />

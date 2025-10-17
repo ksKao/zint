@@ -5,16 +5,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { db } from "@/db";
+import { accounts } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { useAddAccountDialog } from "./dialog-forms/add-account-dialog";
-import { db } from "@/db";
-import { accounts } from "@/db/schema";
+import { useUpsertAccountDialog } from "./dialog-forms/upsert-account-dialog";
 
 export function AccountSelector() {
-  const { setOpen } = useAddAccountDialog();
+  const { setOpen, setAccount } = useUpsertAccountDialog();
   const { navigate } = useRouter();
   const { accountId } = useParams({ strict: false });
   const { data } = useSuspenseQuery({
@@ -51,7 +51,12 @@ export function AccountSelector() {
             {acc.name} ({acc.currency})
           </DropdownMenuItem>
         ))}
-        <DropdownMenuItem onSelect={() => setOpen(true)}>
+        <DropdownMenuItem
+          onSelect={() => {
+            setAccount(undefined);
+            setOpen(true);
+          }}
+        >
           <Plus />
           <span>Create New</span>
         </DropdownMenuItem>

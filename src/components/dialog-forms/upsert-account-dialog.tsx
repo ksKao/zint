@@ -27,7 +27,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { codes } from "currency-codes";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMeasure } from "react-use";
 import { toast } from "sonner";
@@ -40,18 +40,30 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "../ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { accounts as accountsTable } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
-type AddAccountDialogState = {
+type UpsertAccountDialogState = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  account?: typeof accountsTable.$inferSelect;
+  setAccount: (account: typeof accountsTable.$inferSelect | undefined) => void;
 };
 
-export const useAddAccountDialog = create<AddAccountDialogState>()((set) => ({
-  open: false,
-  setOpen: (open) => set({ open }),
-}));
+export const useUpsertAccountDialog = create<UpsertAccountDialogState>()(
+  (set) => ({
+    open: false,
+    setOpen: (open) => set({ open }),
+    account: undefined,
+    setAccount: (account) => set({ account }),
+  }),
+);
 
 const currencyList = codes();
 
@@ -60,8 +72,8 @@ const formSchema = z.object({
   currency: z.literal(currencyList, "Invalid currency code"),
 });
 
-export default function AddAccountDialog() {
-  const { open, setOpen } = useAddAccountDialog();
+export default function UpsertAccountDialog() {
+  const { open, setOpen, account, setAccount } = useUpsertAccountDialog();
   const [currencySelectorOpen, setCurrencySelectorOpen] = useState(false);
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -76,31 +88,60 @@ export default function AddAccountDialog() {
     useMeasure<HTMLButtonElement>();
   const { mutate: addAccount, isPending } = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
-      const cuid = createId();
+      if (account) {
+        await db
+          .update(accountsTable)
+          .set({
+            name: data.name,
+            currency: data.currency,
+          })
+          .where(eq(accountsTable.id, account.id));
 
-      await db.insert(accounts).values({
-        id: cuid,
-        ...data,
-      });
+        return account.id;
+      } else {
+        const cuid = createId();
 
-      return cuid;
+        await db.insert(accounts).values({
+          id: cuid,
+          ...data,
+        });
+
+        return cuid;
+      }
     },
     onSuccess: (createdId) => {
-      toast.success("Account has been created");
-      form.reset();
+      toast.success(
+        account ? "Account info has been saved" : "Account has been created",
+      );
+
       setOpen(false);
+      setAccount(undefined);
+
+      form.reset();
+
       queryClient.invalidateQueries({ queryKey: [queryKeys.account] });
-      navigate({
-        to: "/$accountId",
-        params: {
-          accountId: createdId,
-        },
-      });
+
+      if (!account)
+        navigate({
+          to: "/$accountId",
+          params: {
+            accountId: createdId,
+          },
+        });
     },
     onError: () => {
       toast.error("Unable to create account.");
     },
   });
+
+  useEffect(() => {
+    if (account) {
+      form.setValue("name", account.name);
+      form.setValue("currency", account.currency);
+    } else {
+      form.reset();
+    }
+  }, [account, form]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -111,8 +152,10 @@ export default function AddAccountDialog() {
             className="space-y-4"
           >
             <DialogHeader>
-              <DialogTitle>Add Account</DialogTitle>
-              <DialogDescription>Create a new account</DialogDescription>
+              <DialogTitle>{account ? "Edit" : "Add"} Account</DialogTitle>
+              <DialogDescription>
+                {account ? `Edit ${account.name}` : "Create a new account"}
+              </DialogDescription>
             </DialogHeader>
             <FormField
               control={form.control}

@@ -66,7 +66,7 @@ const transactionSchema = z.object({
   description: z.string().nullish(),
   date: z.coerce.date(),
   payee: z.string().nullish(),
-  isTemporary: z.stringbool(),
+  isTemporary: z.stringbool().optional().default(false),
   amount: z.number(),
   categoryId: z.cuid2().min(1).nullish(),
   subCategoryId: z.cuid2().min(1).nullish(),
@@ -520,7 +520,7 @@ export default function ImportDataForm() {
                         : null,
                       isTemporary: formData.isTemporary
                         ? row.getCell(formData.isTemporary).value
-                        : false,
+                        : "false",
                       amount: row.getCell(formData.amount).value,
                       categoryId,
                       subCategoryId,
