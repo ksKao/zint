@@ -37,7 +37,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
-import { Edit2Icon, Trash2Icon } from "lucide-react";
+import { Edit2Icon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUpsertCategoryDialog } from "../dialog-forms/upsert-category-dialog";
@@ -304,7 +304,17 @@ export default function CategoriesPage({ accountId }: { accountId: string }) {
         </AlertDialogContent>
       </AlertDialog>
       <div className="w-full px-4 py-8">
-        <h1 className="text-2xl font-bold">Categories</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Categories</h1>
+          <Button
+            onClick={() => {
+              setUpsertCategoryDialogCategory(undefined);
+              setUpsertCategoryDialogOpen(true);
+            }}
+          >
+            <PlusIcon /> Add New
+          </Button>
+        </div>
         <div className="my-4 space-y-2">
           <DndContext
             sensors={sensors}

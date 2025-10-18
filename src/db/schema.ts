@@ -44,7 +44,7 @@ export const transactions = sqliteTable(
     id: cuidField,
     title: text("title").notNull(),
     description: text("description"),
-    date: integer("date", { mode: "timestamp" }),
+    date: integer("date", { mode: "timestamp" }).notNull(),
     payee: text("payee"),
     isTemporary: integer("is_temporary", { mode: "boolean" })
       .notNull()
@@ -118,7 +118,7 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
     fields: [transactions.categoryId],
     references: [categories.id],
   }),
-  subCategories: one(subCategories, {
+  subCategory: one(subCategories, {
     fields: [transactions.subCategoryId],
     references: [subCategories.id],
   }),

@@ -204,7 +204,7 @@ export default function UpsertCategoryDialog({
             className="space-y-4"
           >
             <DialogHeader>
-              <DialogTitle>{category ? "Add" : "Edit"} Category</DialogTitle>
+              <DialogTitle>{category ? "Edit" : "Add"} Category</DialogTitle>
               <DialogDescription>
                 {category
                   ? "Update an existing category"

@@ -26,7 +26,7 @@ CREATE TABLE `transactions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`title` text NOT NULL,
 	`description` text,
-	`date` integer,
+	`date` integer NOT NULL,
 	`payee` text,
 	`is_temporary` integer DEFAULT false NOT NULL,
 	`amount` real NOT NULL,
