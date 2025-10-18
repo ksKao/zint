@@ -2,6 +2,14 @@ import UpsertWidgetDialog, {
   useUpsertWidgetDialog,
 } from "@/components/dialog-forms/upsert-widget-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import Widget from "@/components/widget";
 import { db } from "@/db";
 import { widgets as widgetTable } from "@/db/schema";
@@ -9,7 +17,13 @@ import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
-import { PencilIcon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
+import {
+  LayoutDashboardIcon,
+  PencilIcon,
+  PlusIcon,
+  SaveIcon,
+  XIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import GridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
@@ -92,7 +106,7 @@ function Index() {
   }, [widgets, setLayout]);
 
   return (
-    <div className="w-full px-4 py-8">
+    <div className="flex h-full w-full flex-col px-4 py-8">
       <UpsertWidgetDialog accountId={accountId} />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -141,43 +155,70 @@ function Index() {
           </Button>
         </div>
       </div>
-      <GridLayout
-        innerRef={ref}
-        layout={layout}
-        width={width}
-        className="w-full"
-        resizeHandles={["ne", "se", "sw", "nw"]}
-        isDraggable={editMode}
-        isResizable={editMode}
-        preventCollision
-        allowOverlap={false}
-        cols={MAX_COLS}
-        rowHeight={ROW_HEIGHT}
-        margin={[8, 8]}
-        compactType={null}
-        onResize={(e) => {
-          // find reference
-          const resizeTarget = e[0];
+      {widgets.length ? (
+        <GridLayout
+          innerRef={ref}
+          layout={layout}
+          width={width}
+          className="w-full"
+          resizeHandles={["ne", "se", "sw", "nw"]}
+          isDraggable={editMode}
+          isResizable={editMode}
+          preventCollision
+          allowOverlap={false}
+          cols={MAX_COLS}
+          rowHeight={ROW_HEIGHT}
+          margin={[8, 8]}
+          compactType={null}
+          onResize={(e) => {
+            // find reference
+            const resizeTarget = e[0];
 
-          if (!resizeTarget) return;
+            if (!resizeTarget) return;
 
-          const found = tempLayout.find((w) => w.i === e[0]?.i);
+            const found = tempLayout.find((w) => w.i === e[0]?.i);
 
-          if (found) {
-            found.h = resizeTarget.h;
-            found.w = resizeTarget.w;
+            if (found) {
+              found.h = resizeTarget.h;
+              found.w = resizeTarget.w;
 
-            setTempLayout([...tempLayout]);
-          }
-        }}
-        onLayoutChange={setLayout}
-      >
-        {widgets.map((widget) => (
-          <div key={widget.id}>
-            <Widget widget={widget} />
-          </div>
-        ))}
-      </GridLayout>
+              setTempLayout([...tempLayout]);
+            }
+          }}
+          onLayoutChange={setLayout}
+        >
+          {widgets.map((widget) => (
+            <div key={widget.id}>
+              <Widget widget={widget} />
+            </div>
+          ))}
+        </GridLayout>
+      ) : (
+        <Empty className="h-full w-full">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <LayoutDashboardIcon />
+            </EmptyMedia>
+            <EmptyTitle>No Widgets Yet</EmptyTitle>
+            <EmptyDescription>
+              You haven&apos;t created any widgets yet. Get started by creating
+              your first widget.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  setEditingWidget(undefined);
+                  setOpen(true);
+                }}
+              >
+                Create Widget
+              </Button>
+            </div>
+          </EmptyContent>
+        </Empty>
+      )}
     </div>
   );
 }
