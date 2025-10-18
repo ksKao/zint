@@ -48,7 +48,7 @@ function RouteComponent() {
   });
 
   return (
-    <div className="flex h-full w-full flex-col gap-4 px-4 py-8">
+    <div className="flex h-[calc(100%-48px)] w-full flex-col gap-4 px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Transactions</h1>
         <Button onClick={() => setOpen(true)}>
@@ -68,7 +68,6 @@ function RouteComponent() {
           </Alert>
         ) : (
           <TransactionsTable transactions={transactions} account={account} />
-          // <></>
         )}
       </div>
     </div>
