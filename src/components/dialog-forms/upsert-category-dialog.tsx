@@ -29,28 +29,41 @@ import { Switch } from "@/components/ui/switch";
 import { db } from "@/db";
 import { categories, subCategories } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
-import { fileToBase64 } from "@/lib/utils";
+import { base64ToFile, fileToBase64 } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { eq } from "drizzle-orm";
+import { XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
 import { create } from "zustand";
 
-type AddCategoryDialogState = {
+type UpsertCategoryDialogState = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  category?: typeof categories.$inferSelect | typeof subCategories.$inferSelect;
+  setCategory: (
+    category:
+      | typeof categories.$inferSelect
+      | typeof subCategories.$inferSelect
+      | undefined,
+  ) => void;
 };
 
-export const useAddCategoryDialog = create<AddCategoryDialogState>()((set) => ({
-  open: false,
-  setOpen: (open) => set({ open }),
-}));
+export const useUpsertCategoryDialog = create<UpsertCategoryDialogState>()(
+  (set) => ({
+    open: false,
+    setOpen: (open) => set({ open }),
+    category: undefined,
+    setCategory: (category) => set({ category }),
+  }),
+);
 
 const supportedImageTypes: z.core.util.MimeTypes[] = [
   "image/jpeg",
@@ -71,12 +84,12 @@ const formSchema = z.object({
   parentCategory: z.cuid2("Invalid category").nullable(),
 });
 
-export default function AddCategoryDialog({
+export default function UpsertCategoryDialog({
   accountId,
 }: {
   accountId: string;
 }) {
-  const { open, setOpen } = useAddCategoryDialog();
+  const { open, setOpen, category, setCategory } = useUpsertCategoryDialog();
   const [enableSubcategory, setEnableSubcategory] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>();
   const { data: mainCategories } = useSuspenseQuery({
@@ -90,27 +103,56 @@ export default function AddCategoryDialog({
     mutationFn: async (formData: z.infer<typeof formSchema>) => {
       const base64 = formData.file ? await fileToBase64(formData.file) : null;
 
-      if (!formData.parentCategory) {
-        await db.insert(categories).values({
-          name: formData.name,
-          accountId,
-          icon: base64,
-        });
+      if (!category) {
+        if (!formData.parentCategory) {
+          await db.insert(categories).values({
+            name: formData.name,
+            accountId,
+            icon: base64,
+          });
+        } else {
+          await db.insert(subCategories).values({
+            name: formData.name,
+            accountId,
+            icon: base64,
+            categoryId: formData.parentCategory,
+          });
+        }
       } else {
-        await db.insert(subCategories).values({
-          name: formData.name,
-          accountId,
-          icon: base64,
-          categoryId: formData.parentCategory,
-        });
+        if ("categoryId" in category) {
+          await db
+            .update(subCategories)
+            .set({
+              name: formData.name,
+              icon: base64,
+            })
+            .where(eq(subCategories.id, category.id));
+        } else {
+          await db
+            .update(categories)
+            .set({
+              name: formData.name,
+              icon: base64,
+            })
+            .where(eq(categories.id, category.id));
+        }
       }
     },
     onSuccess: (_data, variables) => {
-      toast.success(`${variables.name} has been added successfully`);
+      toast.success(
+        category
+          ? `${variables.name} has been updated.`
+          : `${variables.name} has been added successfully`,
+      );
+
+      setCategory(undefined);
+
       form.reset();
+
       queryClient.invalidateQueries({
         queryKey: [queryKeys.category],
       });
+
       setOpen(false);
     },
     onError: () => {
@@ -138,6 +180,18 @@ export default function AddCategoryDialog({
   }, [image]);
 
   useEffect(() => {
+    if (category) {
+      form.setValue("name", category.name);
+      form.setValue(
+        "file",
+        category.icon ? base64ToFile(category.icon, category.name) : null,
+      );
+    } else {
+      form.reset();
+    }
+  }, [category, form]);
+
+  useEffect(() => {
     form.setValue("parentCategory", null);
   }, [enableSubcategory, form]);
 
@@ -150,8 +204,12 @@ export default function AddCategoryDialog({
             className="space-y-4"
           >
             <DialogHeader>
-              <DialogTitle>Add Category</DialogTitle>
-              <DialogDescription>Create a new category</DialogDescription>
+              <DialogTitle>{category ? "Add" : "Edit"} Category</DialogTitle>
+              <DialogDescription>
+                {category
+                  ? "Update an existing category"
+                  : "Create a new category"}
+              </DialogDescription>
             </DialogHeader>
             <FormField
               control={form.control}
@@ -192,51 +250,61 @@ export default function AddCategoryDialog({
                           field.onChange(image);
                         }}
                       />
+                      {field.value ? (
+                        <Button
+                          variant="ghost"
+                          onClick={() => field.onChange(null)}
+                        >
+                          <XIcon size={16} />
+                        </Button>
+                      ) : null}
                     </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="space-y-4 rounded-md border p-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="enable-subcategory" className="font-normal">
-                  Add as sub-category
-                </Label>
-                <Switch
-                  disabled={!mainCategories.length}
-                  checked={enableSubcategory && !!mainCategories.length}
-                  onCheckedChange={setEnableSubcategory}
-                  id="enable-subcategory"
-                />
+            {category ? null : (
+              <div className="space-y-4 rounded-md border p-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="enable-subcategory" className="font-normal">
+                    Add as sub-category
+                  </Label>
+                  <Switch
+                    disabled={!mainCategories.length}
+                    checked={enableSubcategory && !!mainCategories.length}
+                    onCheckedChange={setEnableSubcategory}
+                    id="enable-subcategory"
+                  />
+                </div>
+                {enableSubcategory ? (
+                  <FormField
+                    control={form.control}
+                    name="parentCategory"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select
+                          onValueChange={(val) => field.onChange(val || null)}
+                          defaultValue={field.value ?? ""}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a main category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {mainCategories.map((cat) => (
+                              <SelectItem value={cat.id} key={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : null}
               </div>
-              {enableSubcategory ? (
-                <FormField
-                  control={form.control}
-                  name="parentCategory"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        onValueChange={(val) => field.onChange(val || null)}
-                        defaultValue={field.value ?? ""}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a main category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mainCategories.map((cat) => (
-                            <SelectItem value={cat.id} key={cat.id}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : null}
-            </div>
+            )}
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline">Cancel</Button>

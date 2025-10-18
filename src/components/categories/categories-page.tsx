@@ -37,9 +37,10 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
-import { Trash2Icon } from "lucide-react";
+import { Edit2Icon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useUpsertCategoryDialog } from "../dialog-forms/upsert-category-dialog";
 
 function CategoryItem({
   category,
@@ -54,6 +55,11 @@ function CategoryItem({
   >;
   setConfirmDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const {
+    setCategory: setUpsertCategoryDialogCategory,
+    setOpen: setUpsertCategoryDialogOpen,
+  } = useUpsertCategoryDialog();
+
   return (
     <Item
       variant="outline"
@@ -64,6 +70,16 @@ function CategoryItem({
       </ItemMedia>
       <ItemContent>{category.name}</ItemContent>
       <ItemActions>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => {
+            setUpsertCategoryDialogCategory(category);
+            setUpsertCategoryDialogOpen(true);
+          }}
+        >
+          <Edit2Icon size={16} />
+        </Button>
         <Button
           size="icon"
           variant="ghost"
@@ -93,6 +109,10 @@ export default function CategoriesPage({ accountId }: { accountId: string }) {
     typeof categoryTable.$inferSelect | typeof subCategories.$inferSelect
   >();
   const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
+  const {
+    setCategory: setUpsertCategoryDialogCategory,
+    setOpen: setUpsertCategoryDialogOpen,
+  } = useUpsertCategoryDialog();
   const { data: categories } = useSuspenseQuery({
     queryKey: [queryKeys.category, accountId],
     queryFn: async () => {
@@ -374,32 +394,49 @@ export default function CategoriesPage({ accountId }: { accountId: string }) {
                       )}
                       {category.subCategories.length ? (
                         <div className="ml-8">
-                          {category.subCategories.map((subcategory) => (
-                            <Draggable
-                              key={subcategory.id}
-                              id={`${category.id}-${subcategory.id}`}
-                              className="cursor-grab"
-                            >
-                              <Item variant="outline" className="rounded-none">
-                                <ItemMedia>
-                                  <CategoryIcon category={subcategory} />
-                                </ItemMedia>
-                                <ItemContent>{subcategory.name}</ItemContent>
-                                <ItemActions>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => {
-                                      setDeletingCategory(subcategory);
-                                      setConfirmDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    <Trash2Icon size={16} />
-                                  </Button>
-                                </ItemActions>
-                              </Item>
-                            </Draggable>
-                          ))}
+                          {category.subCategories
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((subcategory) => (
+                              <Draggable
+                                key={subcategory.id}
+                                id={`${category.id}-${subcategory.id}`}
+                                className="cursor-grab"
+                              >
+                                <Item
+                                  variant="outline"
+                                  className="rounded-none"
+                                >
+                                  <ItemMedia>
+                                    <CategoryIcon category={subcategory} />
+                                  </ItemMedia>
+                                  <ItemContent>{subcategory.name}</ItemContent>
+                                  <ItemActions>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        setUpsertCategoryDialogCategory(
+                                          subcategory,
+                                        );
+                                        setUpsertCategoryDialogOpen(true);
+                                      }}
+                                    >
+                                      <Edit2Icon size={16} />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        setDeletingCategory(subcategory);
+                                        setConfirmDeleteDialogOpen(true);
+                                      }}
+                                    >
+                                      <Trash2Icon size={16} />
+                                    </Button>
+                                  </ItemActions>
+                                </Item>
+                              </Draggable>
+                            ))}
                         </div>
                       ) : null}
                     </div>

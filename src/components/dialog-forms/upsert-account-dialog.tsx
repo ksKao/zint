@@ -86,7 +86,7 @@ export default function UpsertAccountDialog() {
   const queryClient = useQueryClient();
   const [currencySelectorRef, { width: currencySelectorWidth }] =
     useMeasure<HTMLButtonElement>();
-  const { mutate: addAccount, isPending } = useMutation({
+  const { mutate: upsertAccount, isPending } = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
       if (account) {
         await db
@@ -148,7 +148,7 @@ export default function UpsertAccountDialog() {
       <DialogContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => addAccount(data))}
+            onSubmit={form.handleSubmit((data) => upsertAccount(data))}
             className="space-y-4"
           >
             <DialogHeader>
