@@ -34,13 +34,13 @@ import {
 import { db } from "@/db";
 import { transactions } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
-import { getDateAtMidnight } from "@/lib/utils";
+import { getDateAtMidnight, recomputeBalanceAndOrder } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { gt, sql } from "drizzle-orm";
+import { eq, gt, sql } from "drizzle-orm";
 import { CalendarIcon, Info } from "lucide-react";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
@@ -49,12 +49,18 @@ import { create } from "zustand";
 type UpsertTransactionDialogState = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  transaction?: typeof transactions.$inferSelect;
+  setTransaction: (
+    transaction: typeof transactions.$inferSelect | undefined,
+  ) => void;
 };
 
 export const useUpsertTransactionDialog =
   create<UpsertTransactionDialogState>()((set) => ({
     open: false,
     setOpen: (open) => set({ open }),
+    transaction: undefined,
+    setTransaction: (transaction) => set({ transaction }),
   }));
 
 const formSchema = z.object({
@@ -73,40 +79,64 @@ export default function UpsertTransactionDialog({
 }: {
   accountId: string;
 }) {
-  const { open, setOpen } = useUpsertTransactionDialog();
+  const { open, setOpen, transaction, setTransaction } =
+    useUpsertTransactionDialog();
   const queryClient = useQueryClient();
   const { mutate: addTransaction, isPending } = useMutation({
     mutationFn: async (formData: z.infer<typeof formSchema>) => {
       // transaction doesnt work in sqlx and tauri
-      const latestTransaction = await db.query.transactions.findFirst({
-        where: (t, { lte }) => lte(t.date, formData.date),
-        orderBy: (t, { desc }) => [desc(t.date), desc(t.order)],
-      });
 
-      const payload: typeof transactions.$inferInsert = {
-        accountId,
-        ...formData,
-        balance:
-          latestTransaction?.balance === undefined
-            ? formData.amount
-            : latestTransaction.balance + formData.amount,
-        order:
-          latestTransaction?.date?.getTime() === formData.date.getTime()
-            ? latestTransaction.order + 1
-            : 0,
-      };
+      if (transaction) {
+        await db
+          .update(transactions)
+          .set({
+            ...formData,
+          })
+          .where(eq(transactions.id, transaction.id));
 
-      await db.insert(transactions).values(payload);
-      await db
-        .update(transactions)
-        .set({
-          balance: sql`${transactions.balance} + ${formData.amount}`,
-        })
-        .where(gt(transactions.date, formData.date));
+        if (
+          transaction.amount !== formData.amount ||
+          transaction.date.getTime() !== formData.date.getTime()
+        )
+          await recomputeBalanceAndOrder(accountId);
+      } else {
+        const latestTransaction = await db.query.transactions.findFirst({
+          where: (t, { lte }) => lte(t.date, formData.date),
+          orderBy: (t, { desc }) => [desc(t.date), desc(t.order)],
+        });
+
+        const payload: typeof transactions.$inferInsert = {
+          accountId,
+          ...formData,
+          balance:
+            latestTransaction?.balance === undefined
+              ? formData.amount
+              : latestTransaction.balance + formData.amount,
+          order:
+            latestTransaction?.date?.getTime() === formData.date.getTime()
+              ? latestTransaction.order + 1
+              : 0,
+        };
+
+        await db.insert(transactions).values(payload);
+        await db
+          .update(transactions)
+          .set({
+            balance: sql`${transactions.balance} + ${formData.amount}`,
+          })
+          .where(gt(transactions.date, formData.date));
+      }
     },
     onSuccess: () => {
-      toast.success("Transaction has been added.");
+      toast.success(
+        transaction
+          ? "Transaction has been updated"
+          : "Transaction has been added.",
+      );
+
       setOpen(false);
+      setTransaction(undefined);
+
       form.reset();
       queryClient.invalidateQueries({ queryKey: [queryKeys.transaction] });
     },
@@ -138,6 +168,28 @@ export default function UpsertTransactionDialog({
       : new Date(),
   );
 
+  useEffect(() => {
+    if (transaction) {
+      form.reset(
+        {
+          title: transaction.title,
+          amount: transaction.amount,
+          categoryId: transaction.categoryId,
+          date: transaction.date,
+          description: transaction.description,
+          isTemporary: transaction.isTemporary,
+          payee: transaction.payee,
+          subCategoryId: transaction.subCategoryId,
+        },
+        {
+          keepDefaultValues: true,
+        },
+      );
+    } else {
+      form.reset();
+    }
+  }, [form, transaction]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
@@ -147,8 +199,14 @@ export default function UpsertTransactionDialog({
             className="space-y-4"
           >
             <DialogHeader>
-              <DialogTitle>Add Transaction</DialogTitle>
-              <DialogDescription>Create a new transaction</DialogDescription>
+              <DialogTitle>
+                {transaction ? "Edit" : "Add"} Transaction
+              </DialogTitle>
+              <DialogDescription>
+                {transaction
+                  ? "Update an existing transaction"
+                  : "Create a new transaction"}
+              </DialogDescription>
             </DialogHeader>
             <FormField
               control={form.control}

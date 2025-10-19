@@ -1,4 +1,5 @@
 import CategoryIcon from "@/components/category/category-icon";
+import { useUpsertTransactionDialog } from "@/components/dialog-forms/upsert-transaction-dialog";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -9,6 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Item, ItemContent } from "@/components/ui/item";
 import {
   Table,
   TableBody,
@@ -17,20 +19,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { db } from "@/db";
 import {
   accounts,
   categories,
   subCategories,
   transactions as transactionTable,
 } from "@/db/schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { and, eq, gt, or, sql } from "drizzle-orm";
 import { CheckIcon, Edit2Icon, Trash2Icon, XIcon } from "lucide-react";
 import { useState } from "react";
-import { Item, ItemContent } from "@/components/ui/item";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { db } from "@/db";
-import { and, eq, gt, or, sql } from "drizzle-orm";
 
 export default function TransactionsTable({
   transactions,
@@ -42,6 +43,10 @@ export default function TransactionsTable({
   })[];
   account: typeof accounts.$inferSelect;
 }) {
+  const {
+    setOpen: setUpsertTransactionDialogOpen,
+    setTransaction: setUpsertTransactionDialogTransaction,
+  } = useUpsertTransactionDialog();
   const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
   const [deletingTransaction, setDeletingTransaction] =
     useState<typeof transactionTable.$inferSelect>();
@@ -158,23 +163,25 @@ export default function TransactionsTable({
                   <TableCell className="text-center">
                     <p>{transaction.description || "--"}</p>
                   </TableCell>
-                  <TableCell className="flex w-64 items-center justify-center gap-2">
-                    {transaction.category && transaction.subCategory ? (
-                      <>
-                        <CategoryIcon category={transaction.subCategory} />
-                        <p>
-                          {transaction.subCategory.name} (
-                          {transaction.category.name})
-                        </p>
-                      </>
-                    ) : transaction.category ? (
-                      <>
-                        <CategoryIcon category={transaction.category} />
-                        <p>{transaction.category.name}</p>
-                      </>
-                    ) : (
-                      <p>--</p>
-                    )}
+                  <TableCell className="w-64">
+                    <div className="flex items-center justify-center gap-2">
+                      {transaction.category && transaction.subCategory ? (
+                        <>
+                          <CategoryIcon category={transaction.subCategory} />
+                          <p>
+                            {transaction.subCategory.name} (
+                            {transaction.category.name})
+                          </p>
+                        </>
+                      ) : transaction.category ? (
+                        <>
+                          <CategoryIcon category={transaction.category} />
+                          <p>{transaction.category.name}</p>
+                        </>
+                      ) : (
+                        <p>--</p>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="w-32 text-center">
                     <p>{transaction.payee || "--"}</p>
@@ -203,7 +210,14 @@ export default function TransactionsTable({
                     </p>
                   </TableCell>
                   <TableCell className="flex items-center justify-center gap-2">
-                    <Button size="icon" variant="ghost">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        setUpsertTransactionDialogTransaction(transaction);
+                        setUpsertTransactionDialogOpen(true);
+                      }}
+                    >
                       <Edit2Icon />
                     </Button>
                     <Button

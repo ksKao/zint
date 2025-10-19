@@ -1,5 +1,8 @@
+import { db } from "@/db";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { transactions as transactionTable } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -47,4 +50,43 @@ export function getDateAtMidnight(date: Date = new Date()) {
   clone.setHours(0, 0, 0, 0);
 
   return clone;
+}
+
+export async function recomputeBalanceAndOrder(accountId: string) {
+  const transactions = await db.query.transactions.findMany({
+    where: (t, { eq }) => eq(t.accountId, accountId),
+    orderBy: (t, { asc }) => [asc(t.date), asc(t.order)],
+  });
+
+  if (!transactions.length) return;
+
+  await db
+    .update(transactionTable)
+    .set({
+      order: 0,
+      balance: transactions[0].amount,
+    })
+    .where(eq(transactionTable.id, transactions[0].id));
+
+  transactions[0].order = 0;
+  transactions[0].balance = transactions[0].amount;
+
+  for (let i = 1; i < transactions.length; i++) {
+    const order =
+      transactions[i - 1].date.getTime() === transactions[i].date.getTime()
+        ? transactions[i - 1].order + 1
+        : 0;
+
+    transactions[i].balance =
+      transactions[i - 1].balance + transactions[i].amount;
+    transactions[i].order = order;
+
+    await db
+      .update(transactionTable)
+      .set({
+        order,
+        balance: transactions[i - 1].balance + transactions[i].amount,
+      })
+      .where(eq(transactionTable.id, transactions[i].id));
+  }
 }

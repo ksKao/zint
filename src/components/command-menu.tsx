@@ -26,8 +26,10 @@ export default function CommandMenu() {
     setOpen: setUpsertCategoryDialogOpen,
     setCategory: setUpsertCategoryDialogCategory,
   } = useUpsertCategoryDialog();
-  const { setOpen: setUpsertTransactionDialogOpen } =
-    useUpsertTransactionDialog();
+  const {
+    setOpen: setUpsertTransactionDialogOpen,
+    setTransaction: setUpsertTransactionDialogTransaction,
+  } = useUpsertTransactionDialog();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -49,7 +51,10 @@ export default function CommandMenu() {
   const quickActions: { name: string; onSelect: () => void }[] = [
     {
       name: "Add Transaction",
-      onSelect: () => setUpsertTransactionDialogOpen(true),
+      onSelect: () => {
+        setUpsertTransactionDialogOpen(true);
+        setUpsertTransactionDialogTransaction(undefined);
+      },
     },
     {
       name: "Add Category",
