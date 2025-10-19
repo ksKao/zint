@@ -45,7 +45,14 @@ import {
 } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { and, eq, gt, or, sql } from "drizzle-orm";
-import { CheckIcon, Edit2Icon, Trash2Icon, XIcon } from "lucide-react";
+import {
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  CheckIcon,
+  Edit2Icon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
 type Transaction = typeof transactionTable.$inferSelect & {
@@ -143,7 +150,7 @@ export default function TransactionsTable({
           category: row.category,
           subCategory: row.subCategory,
         }),
-        header: "Description",
+        header: "Category",
         size: 240,
         cell: (info) => {
           const data = info.getValue<{
@@ -333,7 +340,7 @@ export default function TransactionsTable({
                         <div
                           {...{
                             className: header.column.getCanSort()
-                              ? "cursor-pointer select-none"
+                              ? "cursor-pointer select-none flex gap-2 items-center"
                               : "",
                             onClick: header.column.getToggleSortingHandler(),
                           }}
@@ -343,8 +350,8 @@ export default function TransactionsTable({
                             header.getContext(),
                           )}
                           {{
-                            asc: " 🔼",
-                            desc: " 🔽",
+                            asc: <ArrowUpNarrowWide size={16} />,
+                            desc: <ArrowDownWideNarrow size={16} />,
                           }[header.column.getIsSorted() as string] ?? null}
                         </div>
                       </TableHead>
