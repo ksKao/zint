@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import CategoryIcon from "@/components/category/category-icon";
 import { useUpsertTransactionDialog } from "@/components/dialog-forms/upsert-transaction-dialog";
 import {
@@ -26,21 +27,38 @@ import {
   subCategories,
   transactions as transactionTable,
 } from "@/db/schema";
+import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  Table as ReactTable,
+  Row,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  useVirtualizer,
+  VirtualItem,
+  Virtualizer,
+} from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { and, eq, gt, or, sql } from "drizzle-orm";
 import { CheckIcon, Edit2Icon, Trash2Icon, XIcon } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
+
+type Transaction = typeof transactionTable.$inferSelect & {
+  category: typeof categories.$inferSelect | null;
+  subCategory: typeof subCategories.$inferSelect | null;
+};
 
 export default function TransactionsTable({
   transactions,
   account,
 }: {
-  transactions: (typeof transactionTable.$inferSelect & {
-    category: typeof categories.$inferSelect | null;
-    subCategory: typeof subCategories.$inferSelect | null;
-  })[];
+  transactions: Transaction[];
+
   account: typeof accounts.$inferSelect;
 }) {
   const {
@@ -102,7 +120,159 @@ export default function TransactionsTable({
         queryClient.invalidateQueries();
       },
     });
+  const columns = useMemo<ColumnDef<Transaction>[]>(
+    () => [
+      {
+        accessorKey: "date",
+        header: "Date",
+        cell: (info) => format(info.getValue<Date>(), "dd MMM yyyy"),
+      },
+      {
+        accessorKey: "title",
+        header: "Title",
+        meta: { className: "grow" },
+      },
+      {
+        accessorKey: "description",
+        header: "Description",
+        meta: { className: "grow" },
+        cell: (info) => info.getValue() || "--",
+      },
+      {
+        accessorFn: (row) => ({
+          category: row.category,
+          subCategory: row.subCategory,
+        }),
+        header: "Description",
+        size: 240,
+        cell: (info) => {
+          const data = info.getValue<{
+            category: Transaction["category"];
+            subCategory: Transaction["subCategory"];
+          }>();
 
+          return (
+            <div className="flex items-center justify-center gap-2">
+              {data.category && data.subCategory ? (
+                <>
+                  <CategoryIcon category={data.subCategory} />
+                  <p>
+                    {data.subCategory.name} ({data.category.name})
+                  </p>
+                </>
+              ) : data.category ? (
+                <>
+                  <CategoryIcon category={data.category} />
+                  <p>{data.category.name}</p>
+                </>
+              ) : (
+                <p>--</p>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        id: "payee",
+        header: "Payee",
+        cell: (info) => info.getValue() || "--",
+      },
+      {
+        accessorKey: "isTemporary",
+        header: () => "Temporary",
+        cell: (info) => (
+          <div className="flex items-center justify-center">
+            {info.getValue<boolean>() ? (
+              <CheckIcon size={16} />
+            ) : (
+              <XIcon size={16} />
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "amount",
+        header: "Amount",
+        cell: (info) => (
+          <p
+            className={`${info.getValue<number>() > 0 ? "text-green-500" : info.getValue<number>() < 0 ? "text-destructive" : ""}`}
+          >
+            {new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: account.currency,
+            }).format(info.getValue<number>())}
+          </p>
+        ),
+      },
+      {
+        accessorKey: "balance",
+        header: "Balance",
+        cell: (info) => (
+          <p>
+            {new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: account.currency,
+            }).format(info.getValue<number>())}
+          </p>
+        ),
+      },
+      {
+        accessorFn: (row) => row,
+        id: "row-action",
+        header: "",
+        cell: (info) => {
+          const transaction = info.getValue<Transaction>();
+
+          return (
+            <>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => {
+                  setUpsertTransactionDialogTransaction(transaction);
+                  setUpsertTransactionDialogOpen(true);
+                }}
+              >
+                <Edit2Icon />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => {
+                  setDeletingTransaction(transaction);
+                  setConfirmDeleteDialogOpen(true);
+                }}
+              >
+                <Trash2Icon />
+              </Button>
+            </>
+          );
+        },
+      },
+    ],
+    [
+      account.currency,
+      setUpsertTransactionDialogOpen,
+      setUpsertTransactionDialogTransaction,
+    ],
+  );
+
+  // The virtualizer will need a reference to the scrollable container element
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const [data, setData] = useState(transactions);
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  useEffect(() => {
+    setData([...transactions]);
+  }, [transactions]);
+
+  // All important CSS styles are included as inline styles for this example. This is not recommended for your code.
   return (
     <>
       <AlertDialog
@@ -135,117 +305,142 @@ export default function TransactionsTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <div className="mb-auto h-fit max-h-full w-full overflow-x-auto overflow-y-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-32 text-center">Date</TableHead>
-              <TableHead className="text-center">Title</TableHead>
-              <TableHead className="text-center">Description</TableHead>
-              <TableHead className="w-32 text-center">Category</TableHead>
-              <TableHead className="w-32 text-center">Payee</TableHead>
-              <TableHead className="w-24 text-center">Temporary</TableHead>
-              <TableHead className="w-32 text-center">Amount</TableHead>
-              <TableHead className="w-32 text-center">Balance</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transactions.length ? (
-              transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell className="w-32 text-center">
-                    {format(transaction.date, "dd MMM yyyy")}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {transaction.title}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <p>{transaction.description || "--"}</p>
-                  </TableCell>
-                  <TableCell className="w-64">
-                    <div className="flex items-center justify-center gap-2">
-                      {transaction.category && transaction.subCategory ? (
-                        <>
-                          <CategoryIcon category={transaction.subCategory} />
-                          <p>
-                            {transaction.subCategory.name} (
-                            {transaction.category.name})
-                          </p>
-                        </>
-                      ) : transaction.category ? (
-                        <>
-                          <CategoryIcon category={transaction.category} />
-                          <p>{transaction.category.name}</p>
-                        </>
-                      ) : (
-                        <p>--</p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="w-32 text-center">
-                    <p>{transaction.payee || "--"}</p>
-                  </TableCell>
-                  <TableCell className="w-24">
-                    <div className="flex items-center justify-center">
-                      {transaction.isTemporary ? <CheckIcon /> : <XIcon />}
-                    </div>
-                  </TableCell>
-                  <TableCell
-                    className={`w-32 text-center ${transaction.amount > 0 ? "text-green-500" : transaction.amount < 0 ? "text-destructive" : ""}`}
-                  >
-                    <p>
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: account.currency,
-                      }).format(transaction.amount)}
-                    </p>
-                  </TableCell>
-                  <TableCell className="w-48 text-center">
-                    <p>
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: account.currency,
-                      }).format(transaction.balance)}
-                    </p>
-                  </TableCell>
-                  <TableCell className="flex items-center justify-center gap-2">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => {
-                        setUpsertTransactionDialogTransaction(transaction);
-                        setUpsertTransactionDialogOpen(true);
-                      }}
-                    >
-                      <Edit2Icon />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => {
-                        setDeletingTransaction(transaction);
-                        setConfirmDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2Icon />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={9}
-                  className="text-muted-foreground text-center"
+      <div className="h-full w-full">
+        <div
+          className="relative h-full w-full overflow-auto pr-4"
+          ref={tableContainerRef}
+        >
+          {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
+          <Table className="h-full w-full">
+            <TableHeader className="sticky top-0 z-10 grid w-full">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow
+                  key={headerGroup.id}
+                  className="bg-background flex w-full"
                 >
-                  No Transactions Available
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={cn(
+                          "flex items-center justify-center",
+                          header.column.columnDef.meta?.className,
+                        )}
+                        style={{
+                          width: header.getSize(),
+                        }}
+                      >
+                        <div
+                          {...{
+                            className: header.column.getCanSort()
+                              ? "cursor-pointer select-none"
+                              : "",
+                            onClick: header.column.getToggleSortingHandler(),
+                          }}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                          {{
+                            asc: " 🔼",
+                            desc: " 🔽",
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </div>
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBodyVirtualized
+              table={table}
+              tableContainerRef={tableContainerRef}
+            />
+          </Table>
+        </div>
       </div>
     </>
+  );
+}
+
+interface TableBodyProps {
+  table: ReactTable<Transaction>;
+  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+}
+
+function TableBodyVirtualized({ table, tableContainerRef }: TableBodyProps) {
+  const { rows } = table.getRowModel();
+
+  // Important: Keep the row virtualizer in the lowest component possible to avoid unnecessary re-renders.
+  const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
+    count: rows.length,
+    estimateSize: () => 52, //estimate row height for accurate scrollbar dragging
+    getScrollElement: () => tableContainerRef.current,
+    // measure dynamic row height, except in firefox because it measures table border height incorrectly
+    measureElement:
+      typeof window !== "undefined" &&
+      navigator.userAgent.indexOf("Firefox") === -1
+        ? (element) => element?.getBoundingClientRect().height
+        : undefined,
+    overscan: 5,
+  });
+
+  return (
+    <TableBody
+      className="relative grid"
+      style={{
+        height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
+      }}
+    >
+      {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        const row = rows[virtualRow.index] as Row<Transaction>;
+        return (
+          <TableBodyRow
+            key={row.id}
+            row={row}
+            virtualRow={virtualRow}
+            rowVirtualizer={rowVirtualizer}
+          />
+        );
+      })}
+    </TableBody>
+  );
+}
+
+interface TableBodyRowProps {
+  row: Row<Transaction>;
+  virtualRow: VirtualItem;
+  rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>;
+}
+
+function TableBodyRow({ row, virtualRow, rowVirtualizer }: TableBodyRowProps) {
+  return (
+    <TableRow
+      data-index={virtualRow.index} //needed for dynamic row height measurement
+      ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+      key={row.id}
+      className="absolute flex w-full"
+      style={{
+        transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+      }}
+    >
+      {row.getVisibleCells().map((cell) => {
+        return (
+          <TableCell
+            key={cell.id}
+            className={cn(
+              "flex items-center justify-center text-center whitespace-normal",
+              cell.column.columnDef.meta?.className,
+            )}
+            style={{
+              width: cell.column.getSize(),
+            }}
+          >
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        );
+      })}
+    </TableRow>
   );
 }

@@ -74,7 +74,7 @@ function RouteComponent() {
         <h1 className="text-2xl font-bold">Transactions</h1>
         <div className="flex items-center gap-2">
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger asChild>
               <Button
                 onClick={() => recomputeBalance()}
                 variant="outline"
