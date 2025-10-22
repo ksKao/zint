@@ -1,6 +1,5 @@
 import CategoryDropdown from "@/components/category/category-dropdown";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogClose,
@@ -19,11 +18,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -37,14 +31,14 @@ import { queryKeys } from "@/lib/query-keys";
 import { getDateAtMidnight, recomputeBalanceAndOrder } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { eq, gt, sql } from "drizzle-orm";
-import { CalendarIcon, Info } from "lucide-react";
-import { Suspense, useEffect, useState } from "react";
+import { Info } from "lucide-react";
+import { Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
 import { create } from "zustand";
+import DatePicker from "../custom/date-picker";
 
 type UpsertTransactionDialogState = {
   open: boolean;
@@ -66,7 +60,7 @@ export const useUpsertTransactionDialog =
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string("Invalid description").nullable(),
-  date: z.coerce.date("Invalid date"),
+  date: z.date("Invalid date"),
   payee: z.string("Invalid payee").nullable(),
   isTemporary: z.boolean("Invalid value"),
   amount: z.coerce.number("Amount is invalid"),
@@ -144,7 +138,6 @@ export default function UpsertTransactionDialog({
       toast.error("An error occurred while trying to add transaction.");
     },
   });
-  const [dateSelectorOpen, setDateSelectorOpen] = useState(false);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -158,15 +151,6 @@ export default function UpsertTransactionDialog({
       subCategoryId: null,
     },
   });
-
-  const dateFormValue = form.watch("date");
-  const selectedDate = new Date(
-    typeof dateFormValue === "string" ||
-    typeof dateFormValue === "number" ||
-    dateFormValue instanceof Date
-      ? dateFormValue
-      : new Date(),
-  );
 
   useEffect(() => {
     if (transaction) {
@@ -225,37 +209,12 @@ export default function UpsertTransactionDialog({
                   control={form.control}
                   name="date"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date</FormLabel>
-                      <Popover
-                        modal
-                        open={dateSelectorOpen}
-                        onOpenChange={setDateSelectorOpen}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            id="date"
-                            className="items-center justify-between font-normal"
-                          >
-                            {format(selectedDate, "dd MMM yyyy")}
-                            <CalendarIcon />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="flex w-fit justify-center p-0">
-                          <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            className="text-primary-foreground"
-                            onSelect={(date) => {
-                              field.onChange(date);
-                              setDateSelectorOpen(false);
-                            }}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
+                    <DatePicker
+                      label="Date"
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select a date"
+                    />
                   )}
                 />
               </div>

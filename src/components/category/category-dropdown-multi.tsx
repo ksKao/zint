@@ -78,7 +78,7 @@ export default function CategoryDropdownMulti({
           {existingCategories.map((cat) =>
             cat.subCategories.length ? (
               <DropdownMenuSub key={cat.id}>
-                <DropdownMenuSubTrigger className="flex gap-4">
+                <DropdownMenuSubTrigger className="flex gap-4 pl-8">
                   <CategoryIcon category={cat} />
                   {cat.name}
                 </DropdownMenuSubTrigger>

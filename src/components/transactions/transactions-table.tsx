@@ -132,7 +132,7 @@ export default function TransactionsTable({
       {
         accessorKey: "date",
         header: "Date",
-        cell: (info) => format(info.getValue<Date>(), "dd MMM yyyy"),
+        cell: (info) => format(info.getValue<number>(), "dd MMM yyyy"),
       },
       {
         accessorKey: "title",
@@ -392,6 +392,14 @@ function TableBodyVirtualized({ table, tableContainerRef }: TableBodyProps) {
         : undefined,
     overscan: 5,
   });
+
+  if (!rows.length) {
+    return (
+      <div className="text-muted-foreground flex w-full items-center justify-center p-4">
+        <p>No transactions found.</p>
+      </div>
+    );
+  }
 
   return (
     <TableBody
