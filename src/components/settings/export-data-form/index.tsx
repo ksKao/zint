@@ -24,7 +24,7 @@ export default function ExportDataForm() {
         const transactions = await db.query.transactions.findMany({
           with: {
             category: true,
-            subCategories: true,
+            subCategory: true,
           },
           where: eq(transactionTable.accountId, account.id),
           orderBy: [asc(transactionTable.date), asc(transactionTable.order)],
@@ -79,7 +79,7 @@ export default function ExportDataForm() {
             no: i + 1,
             ...transaction,
             category: transaction.category?.name,
-            subcategory: transaction.subCategories?.name,
+            subcategory: transaction.subCategory?.name,
             isTemporary: transaction.isTemporary ? "Yes" : "No",
           })),
         );

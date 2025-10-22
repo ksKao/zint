@@ -10,13 +10,11 @@ import { cn } from "@/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
 import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 
-export type Option = Record<"value" | "label", string> & Record<string, string>;
-
 type AutoCompleteProps = {
-  options: Option[];
+  options: string[];
+  value: string;
+  onChange: (value: string) => void;
   emptyMessage?: string;
-  value?: Option;
-  onValueChange?: (value: Option) => void;
   isLoading?: boolean;
   disabled?: boolean;
   placeholder?: string;
@@ -24,9 +22,9 @@ type AutoCompleteProps = {
 
 export const AutoComplete = ({
   options,
-  placeholder,
   value,
-  onValueChange,
+  onChange,
+  placeholder,
   disabled,
   emptyMessage = "",
   isLoading = false,
@@ -34,7 +32,6 @@ export const AutoComplete = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [isOpen, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState<string>(value?.label || "");
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
@@ -50,11 +47,10 @@ export const AutoComplete = ({
 
       // This is not a default behaviour of the <input /> field
       if (event.key === "Enter" && input.value !== "") {
-        const optionToSelect = options.find(
-          (option) => option.label === input.value,
-        );
+        const optionToSelect = options.find((option) => option === input.value);
+
         if (optionToSelect) {
-          onValueChange?.(optionToSelect);
+          onChange(optionToSelect);
         }
       }
 
@@ -62,7 +58,7 @@ export const AutoComplete = ({
         input.blur();
       }
     },
-    [isOpen, options, onValueChange],
+    [isOpen, options, onChange],
   );
 
   const handleBlur = useCallback(() => {
@@ -70,10 +66,8 @@ export const AutoComplete = ({
   }, []);
 
   const handleSelectOption = useCallback(
-    (selectedOption: Option) => {
-      setInputValue(selectedOption.label);
-
-      onValueChange?.(selectedOption);
+    (selectedOption: string) => {
+      onChange(selectedOption);
 
       // This is a hack to prevent the input from being focused after the user selects an option
       // We can call this hack: "The next tick"
@@ -81,7 +75,7 @@ export const AutoComplete = ({
         inputRef?.current?.blur();
       }, 0);
     },
-    [onValueChange],
+    [onChange],
   );
 
   return (
@@ -89,8 +83,8 @@ export const AutoComplete = ({
       <div>
         <CommandInput
           ref={inputRef}
-          value={inputValue}
-          onValueChange={isLoading ? undefined : setInputValue}
+          value={value}
+          onValueChange={isLoading ? undefined : onChange}
           onBlur={handleBlur}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
@@ -121,8 +115,8 @@ export const AutoComplete = ({
                 <CommandGroup>
                   {options.map((option) => (
                     <CommandItem
-                      key={option.value}
-                      value={option.label}
+                      key={option}
+                      value={option}
                       onMouseDown={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
@@ -130,7 +124,7 @@ export const AutoComplete = ({
                       onSelect={() => handleSelectOption(option)}
                       className={cn("flex w-full items-center gap-2")}
                     >
-                      {option.label}
+                      {option}
                     </CommandItem>
                   ))}
                 </CommandGroup>

@@ -1,4 +1,5 @@
 import CategoryDropdown from "@/components/category/category-dropdown";
+import DatePicker from "@/components/custom/date-picker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,15 +31,16 @@ import { transactions } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
 import { getDateAtMidnight, recomputeBalanceAndOrder } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { eq, gt, sql } from "drizzle-orm";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { eq, gt, like, sql } from "drizzle-orm";
 import { Info } from "lucide-react";
 import { Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
 import { create } from "zustand";
-import DatePicker from "../custom/date-picker";
+import { AutoComplete } from "@/components/custom/autocomplete";
+import lavenshtein from "fast-levenshtein";
 
 type UpsertTransactionDialogState = {
   open: boolean;
@@ -67,6 +69,36 @@ const formSchema = z.object({
   categoryId: z.cuid2("Invalid category").nullable(),
   subCategoryId: z.cuid2("Invalid sub category").nullable(),
 });
+
+function TitleAutoComplete({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const { data } = useQuery({
+    queryKey: [queryKeys.transaction, value],
+    queryFn: async () => {
+      if (!value) return [];
+
+      return (
+        await db
+          .selectDistinct({
+            title: transactions.title,
+          })
+          .from(transactions)
+          .where(like(transactions.title, `%${value}%`))
+      )
+        .map((t) => t.title)
+        .sort((a, b) => lavenshtein.get(a, b));
+    },
+  });
+
+  return (
+    <AutoComplete options={data ?? []} value={value} onChange={onChange} />
+  );
+}
 
 export default function UpsertTransactionDialog({
   accountId,
@@ -198,7 +230,13 @@ export default function UpsertTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Title</FormLabel>
-                  <Input {...field} placeholder="Title" />
+                  {/* <Input {...field} placeholder="Title" /> */}
+                  <FormControl>
+                    <TitleAutoComplete
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
