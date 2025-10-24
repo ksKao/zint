@@ -71,7 +71,7 @@ export default function PieWidget({
             (prev, curr) => {
               prev.obj[curr.key] = {
                 label: curr.group,
-                color: `var(--chart-${prev.index})`,
+                color: `var(--chart-${(prev.index % 5) + 1})`,
               };
               return {
                 obj: prev.obj,

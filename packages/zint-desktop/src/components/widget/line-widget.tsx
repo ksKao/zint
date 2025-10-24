@@ -60,7 +60,7 @@ export default function LineWidget({
                 key={key}
                 dataKey={key}
                 type="monotone"
-                stroke={`var(--chart-${(i + 1) % 5})`}
+                stroke={`var(--chart-${(i % 5) + 1})`}
                 strokeWidth={2}
                 dot={false}
               />
@@ -85,9 +85,9 @@ export default function LineWidget({
                 key={key}
                 dataKey={key}
                 type="monotone"
-                fill={`var(--chart-${(i + 1) % 5})`}
+                fill={`var(--chart-${(i % 5) + 1})`}
                 fillOpacity={0.4}
-                stroke={`var(--chart-${(i + 1) % 5})`}
+                stroke={`var(--chart-${(i % 5) + 1})`}
                 strokeWidth={2}
                 dot={false}
                 stackId={config.groupBy?.isStacked ? 0 : i}
