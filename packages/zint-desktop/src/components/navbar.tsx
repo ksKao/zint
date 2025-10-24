@@ -44,7 +44,7 @@ export default function Navbar() {
     <nav className="border-border flex w-72 flex-col justify-between border-r px-4 py-8">
       <div className="flex items-center justify-between">
         <div className="flex w-full items-center gap-4">
-          <img src="/tauri.svg" alt="logo" className="h-8 w-8" />
+          <img src="/icon.png" alt="logo" className="h-8 w-8" />
           <h1 className="text-2xl font-bold">Zint</h1>
         </div>
         <CommandMenu />
