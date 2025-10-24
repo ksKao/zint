@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import ExportDataForm from "./export-data-form";
 import ImportDataForm from "./import-data-form/index";
 import ManageAccounts from "./manage-accounts";
+import BackupData from "./backup-data";
 
 export default function SettingsPage() {
   return (
@@ -11,12 +12,16 @@ export default function SettingsPage() {
       <Tabs className="my-4" defaultValue="accounts">
         <TabsList>
           <TabsTrigger value="accounts">Accounts</TabsTrigger>
+          <TabsTrigger value="backup">Backup</TabsTrigger>
           <TabsTrigger value="export">Export</TabsTrigger>
           <TabsTrigger value="import">Import</TabsTrigger>
         </TabsList>
         <Suspense>
           <TabsContent value="accounts">
             <ManageAccounts />
+          </TabsContent>
+          <TabsContent value="backup">
+            <BackupData />
           </TabsContent>
           <TabsContent value="import">
             <ImportDataForm />
