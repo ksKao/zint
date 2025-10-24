@@ -15,7 +15,6 @@ export default defineConfig([
     extends: ["js/recommended"],
     languageOptions: { globals: globals.browser },
   },
-  // @ts-expect-error https://github.com/eslint/eslint/issues/19570
   tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   ...pluginQuery.configs["flat/recommended"],
