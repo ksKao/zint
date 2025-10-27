@@ -1,0 +1,9 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <script>
+    window.location.replace(`zint://${window.location.hash}`);
+  </script>
+</Layout>
