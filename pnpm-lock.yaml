@@ -26,8 +26,8 @@ importers:
         specifier: ^5.2.1
         version: 5.2.2(react-hook-form@7.65.0(react@19.2.0))
       '@paralleldrive/cuid2':
-        specifier: ^2.2.2
-        version: 2.3.0
+        specifier: ^2.3.1
+        version: 2.3.1
       '@radix-ui/primitive':
         specifier: 1.1.2
         version: 1.1.2
@@ -1033,9 +1033,9 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@noble/hashes@2.0.1':
-    resolution: {integrity: sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==}
-    engines: {node: '>= 20.19.0'}
+  '@noble/hashes@1.8.0':
+    resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
+    engines: {node: ^14.21.3 || >=16}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1052,9 +1052,8 @@ packages:
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
 
-  '@paralleldrive/cuid2@2.3.0':
-    resolution: {integrity: sha512-dnBUdZHawCgqpp8bJhzFDAdkzci00nCN47EiW6TxD9OVfP+gh4qVnstXRRnBKW3hm9vpa+P7cod6jiBJdf7V+g==}
-    deprecated: this version is deprecated because it should have been a major bump
+  '@paralleldrive/cuid2@2.3.1':
+    resolution: {integrity: sha512-XO7cAxhnTZl0Yggq6jOgjiOHhbgcO4NqFqwSmQpjK3b6TEE6Uj/jfSk6wzYyemh3+I0sHirKSetjQwn5cZktFw==}
     hasBin: true
 
   '@radix-ui/number@1.1.1':
@@ -3010,9 +3009,6 @@ packages:
   entities@6.0.1:
     resolution: {integrity: sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g==}
     engines: {node: '>=0.12'}
-
-  error-causes@3.0.2:
-    resolution: {integrity: sha512-i0B8zq1dHL6mM85FGoxaJnVtx6LD5nL2v0hlpGdntg5FOSyzQ46c9lmz5qx0xRS2+PWHGOHcYxGIBC5Le2dRMw==}
 
   error-stack-parser@2.1.4:
     resolution: {integrity: sha512-Sk5V6wVazPhq5MhpO+AUxJn5x7XSXGl1R93Vn7i+zS15KDVxQijejNCrz8340/2bgLBjR9GtEG8ZVKONDjcqGQ==}
@@ -5921,7 +5917,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@noble/hashes@2.0.1': {}
+  '@noble/hashes@1.8.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -5937,10 +5933,9 @@ snapshots:
 
   '@oslojs/encoding@1.1.0': {}
 
-  '@paralleldrive/cuid2@2.3.0':
+  '@paralleldrive/cuid2@2.3.1':
     dependencies:
-      '@noble/hashes': 2.0.1
-      error-causes: 3.0.2
+      '@noble/hashes': 1.8.0
 
   '@radix-ui/number@1.1.1': {}
 
@@ -8007,8 +8002,6 @@ snapshots:
       tapable: 2.3.0
 
   entities@6.0.1: {}
-
-  error-causes@3.0.2: {}
 
   error-stack-parser@2.1.4:
     dependencies:
