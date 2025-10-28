@@ -9,6 +9,7 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
+import { parseMultipart } from "@mjackson/multipart-parser";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -73,10 +74,9 @@ export default function BackupData() {
   } = useMutation({
     mutationFn: async () => {
       if (!googleToken || !googleToken.accessToken) {
-        toast.error(
+        throw new Error(
           "You are not signed into your Google account. Unable to backup",
         );
-        return;
       }
 
       const mediaFile = new File(
@@ -149,10 +149,55 @@ export default function BackupData() {
       await refetch();
     },
     onError: (e) => {
-      console.log(e);
-      toast.error("An error occurred while trying to create a backup.");
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("An error occurred while trying to create a backup.");
+      }
     },
   });
+  const { mutate: restoreBackup, isPending: restoreBackupPending } =
+    useMutation({
+      mutationFn: async () => {
+        if (!file) throw new Error("No backup file found.");
+
+        if (!googleToken || !googleToken.accessToken)
+          throw new Error("Unable to authenticate with Google.");
+
+        const response = await fetch(
+          `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`,
+          {
+            headers: new Headers({
+              Authorization: `Bearer ${googleToken.accessToken}`,
+            }),
+          },
+        );
+
+        const text = await response.text();
+        let boundary = text.split(/\r?\n/)[0];
+
+        if (!boundary)
+          throw new Error("Google Drive returned corrupted file format.");
+
+        boundary = boundary.slice(2);
+
+        for (const part of parseMultipart(new TextEncoder().encode(text), {
+          boundary,
+        })) {
+          console.log(part.text);
+        }
+      },
+      onSuccess: async () => {
+        toast.success("Backup restored.");
+      },
+      onError: (e) => {
+        if (e instanceof Error) {
+          toast.error(e.message);
+        } else {
+          toast.error("An error occurred while trying to create a backup.");
+        }
+      },
+    });
 
   useEffect(() => {
     let unsub: Awaited<ReturnType<typeof onOpenUrl>> | undefined = undefined;
@@ -301,7 +346,12 @@ export default function BackupData() {
                 </ItemDescription>
               </ItemContent>
               <ItemActions>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => restoreBackup()}
+                  loading={restoreBackupPending}
+                >
                   Restore
                 </Button>
               </ItemActions>
