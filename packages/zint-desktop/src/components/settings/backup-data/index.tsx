@@ -79,6 +79,18 @@ export default function BackupData() {
         return;
       }
 
+      const mediaFile = new File(
+        [
+          JSON.stringify({
+            hello: "world",
+          }),
+        ],
+        "media.json",
+        {
+          type: "application/json",
+        },
+      );
+
       if (!file) {
         const formData = new FormData();
 
@@ -99,20 +111,7 @@ export default function BackupData() {
           ),
         );
 
-        formData.append(
-          "file",
-          new File(
-            [
-              JSON.stringify({
-                hello: "world",
-              }),
-            ],
-            "media.json",
-            {
-              type: "application/json",
-            },
-          ),
-        );
+        formData.append("file", mediaFile);
 
         const response = await fetch(
           "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
@@ -127,7 +126,22 @@ export default function BackupData() {
 
         if (!response.ok) throw new Error();
       } else {
-        toast.error("Backup already exists");
+        const formData = new FormData();
+
+        formData.append("file", mediaFile);
+
+        const response = await fetch(
+          `https://www.googleapis.com/upload/drive/v3/files/${file.id}`,
+          {
+            headers: new Headers({
+              Authorization: `Bearer ${googleToken.accessToken}`,
+            }),
+            method: "PATCH",
+            body: formData,
+          },
+        );
+
+        if (!response.ok) throw new Error();
       }
     },
     onSuccess: async () => {
@@ -300,23 +314,25 @@ export default function BackupData() {
             </Item>
           )}
 
-          <Button
-            className="mt-4 w-full"
-            onClick={() => createOrUploadBackup()}
-            loading={createOrUploadBackupPending}
-          >
-            {file ? (
-              <>
-                <RefreshCwIcon />
-                Update Backup
-              </>
-            ) : (
-              <>
-                <PlusIcon />
-                Create Backup
-              </>
-            )}
-          </Button>
+          {!isPending && !isError ? (
+            <Button
+              className="mt-4 w-full"
+              onClick={() => createOrUploadBackup()}
+              loading={createOrUploadBackupPending}
+            >
+              {file ? (
+                <>
+                  <RefreshCwIcon />
+                  Update Backup
+                </>
+              ) : (
+                <>
+                  <PlusIcon />
+                  Create Backup
+                </>
+              )}
+            </Button>
+          ) : null}
         </>
       ) : null}
     </div>
