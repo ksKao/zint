@@ -314,7 +314,7 @@ export default function TransactionsTable({
       </AlertDialog>
       <div className="h-full w-full">
         <div
-          className="relative h-full w-full overflow-auto pr-4"
+          className="relative h-full w-full overflow-auto"
           ref={tableContainerRef}
         >
           {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
