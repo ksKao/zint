@@ -478,7 +478,14 @@ export default function BackupData() {
           </ItemContent>
           {googleAuthStatus === "Signed In" ? (
             <ItemActions>
-              <Button size="icon" onClick={() => removeGoogleToken()}>
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => {
+                  removeGoogleToken();
+                  toast.success("Signed out from Google Drive");
+                }}
+              >
                 <LogOutIcon />
               </Button>
             </ItemActions>
@@ -491,6 +498,7 @@ export default function BackupData() {
               await openUrl(
                 "https://accounts.google.com/o/oauth2/v2/auth?client_id=39590283211-qas56lkbc7dk35dm9scjp35eqksfh0ol.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fzint.ks-kao.com%2Fauth&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.appdata",
               );
+              toast.success("A browser has opened.");
             }}
           >
             Sign in via Google
