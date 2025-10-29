@@ -123,3 +123,10 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
     references: [subCategories.id],
   }),
 }));
+
+export const widgetRelations = relations(widgets, ({one}) => ({
+  account: one(accounts, {
+    fields: [widgets.accountId],
+    references: [accounts.id]
+  })
+}))
