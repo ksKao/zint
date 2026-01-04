@@ -19,6 +19,8 @@ import {
 } from "@/lib/types/widget.type";
 import { useFormContext } from "react-hook-form";
 import TableOrderConfigForm from "./table-order-config-form";
+import { IconName, IconPicker } from "@/components/ui/icon-picker";
+import { Input } from "@/components/ui/input";
 
 export default function CardWidgetConfigForm() {
   const form = useFormContext<WidgetConfig>();
@@ -51,6 +53,32 @@ export default function CardWidgetConfigForm() {
               </SelectContent>
             </Select>
             <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="icon"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Icon</FormLabel>
+            <IconPicker
+              modal
+              value={field.value as IconName}
+              onValueChange={(val) => {
+                field.onChange(val);
+              }}
+            />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="text"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Text</FormLabel>
+            <Input {...field} placeholder="Card Text" />
           </FormItem>
         )}
       />

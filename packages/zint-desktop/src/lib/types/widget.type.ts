@@ -294,6 +294,8 @@ export type TableWidgetConfig = z.infer<typeof tableWidgetSchema>;
 export const cardWidgetSchema = z.object({
   ...baseWidgetSchema.shape,
   type: z.literal(widgetTypeSchema.enum["Card"]),
+  icon: z.string("Invalid icon").optional(),
+  text: z.string("Invalid text").optional().default(""),
   displayValue: z.literal(
     [...tableWidgetRegularColumns, ...tableWidgetAggregationColumns] as const,
     "Invalid display value",

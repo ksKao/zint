@@ -74,9 +74,7 @@ export default function Widget({
           <TableWidget config={widget.config} height={heightWithoutHeader} />
         );
       case "Card":
-        return (
-          <CardWidget config={widget.config} height={heightWithoutHeader} />
-        );
+        return <CardWidget config={widget.config} />;
       default:
         return null;
     }
@@ -135,7 +133,9 @@ export default function Widget({
               <Alert className="w-fit" variant="destructive">
                 <AlertCircleIcon />
                 <AlertTitle>Error</AlertTitle>
-                <AlertDescription>Unable to render this widget. Please check your configuration.</AlertDescription>
+                <AlertDescription>
+                  Unable to render this widget. Please check your configuration.
+                </AlertDescription>
               </Alert>
             </div>
           )}

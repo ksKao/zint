@@ -540,7 +540,6 @@ export default function ImportDataForm() {
                     return;
                   }
 
-                  console.log(newCategories.size, newSubcategories.size);
                   setParsedData({
                     transactions: parsedTransactions,
                     newCategories,

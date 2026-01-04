@@ -25,7 +25,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import GridLayout from "react-grid-layout";
+import { Layout, ReactGridLayout, getCompactor } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { useMeasure } from "react-use";
@@ -40,27 +40,22 @@ export const MAX_COLS = 12;
 export const ROW_HEIGHT = 100;
 
 type LocalDashboardLayoutState = {
-  layout: GridLayout.Layout[];
-  tempLayout: GridLayout.Layout[]; // represents the layout that is currently being dragged
-  setLayout: (layout: GridLayout.Layout[]) => void;
-  setTempLayout: (layout: GridLayout.Layout[]) => void;
+  layout: Layout;
+  setLayout: (layout: Layout) => void;
 };
 
 export const useLocalDashboardLayout = create<LocalDashboardLayoutState>()(
   (set) => ({
     layout: [],
-    tempLayout: [],
     setLayout: (layout) => {
-      set({ layout, tempLayout: layout });
+      set({ layout });
     },
-    setTempLayout: (layout) => set({ tempLayout: layout }),
   }),
 );
 
 function Index() {
   const [editMode, setEditMode] = useState(false);
-  const { layout, setLayout, tempLayout, setTempLayout } =
-    useLocalDashboardLayout();
+  const { layout, setLayout } = useLocalDashboardLayout();
 
   const { setOpen, setEditingWidget } = useUpsertWidgetDialog();
   const { accountId } = Route.useParams();
@@ -156,33 +151,35 @@ function Index() {
         </div>
       </div>
       {widgets.length ? (
-        <GridLayout
+        <ReactGridLayout
           innerRef={ref}
           layout={layout}
           width={width}
           className="w-full"
-          resizeHandles={["ne", "se", "sw", "nw"]}
-          isDraggable={editMode}
-          isResizable={editMode}
-          preventCollision
-          allowOverlap={false}
-          cols={MAX_COLS}
-          rowHeight={ROW_HEIGHT}
-          margin={[8, 8]}
-          compactType={null}
+          resizeConfig={{
+            enabled: editMode,
+            handles: ["ne", "se", "sw", "nw"],
+          }}
+          dragConfig={{ enabled: editMode }}
+          gridConfig={{
+            cols: MAX_COLS,
+            rowHeight: ROW_HEIGHT,
+            margin: [8, 8],
+          }}
+          compactor={getCompactor(null, false, true)}
           onResize={(e) => {
             // find reference
             const resizeTarget = e[0];
 
             if (!resizeTarget) return;
 
-            const found = tempLayout.find((w) => w.i === e[0]?.i);
+            const found = layout.find((w) => w.i === e[0]?.i);
 
             if (found) {
               found.h = resizeTarget.h;
               found.w = resizeTarget.w;
 
-              setTempLayout([...tempLayout]);
+              setLayout([...layout]);
             }
           }}
           onLayoutChange={setLayout}
@@ -192,7 +189,7 @@ function Index() {
               <Widget widget={widget} />
             </div>
           ))}
-        </GridLayout>
+        </ReactGridLayout>
       ) : (
         <Empty className="h-full w-full">
           <EmptyHeader>
