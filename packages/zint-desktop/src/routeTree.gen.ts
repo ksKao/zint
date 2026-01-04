@@ -8,8 +8,6 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
-
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,13 +17,6 @@ import { Route as AccountIdLayoutTransactionsRouteImport } from './routes/$accou
 import { Route as AccountIdLayoutSettingsRouteImport } from './routes/$accountId/_layout/settings'
 import { Route as AccountIdLayoutCategoriesRouteImport } from './routes/$accountId/_layout/categories'
 
-const AccountIdRouteImport = createFileRoute('/$accountId')()
-
-const AccountIdRoute = AccountIdRouteImport.update({
-  id: '/$accountId',
-  path: '/$accountId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -37,8 +28,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountIdLayoutRouteRoute = AccountIdLayoutRouteRouteImport.update({
-  id: '/_layout',
-  getParentRoute: () => AccountIdRoute,
+  id: '/$accountId/_layout',
+  path: '/$accountId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AccountIdLayoutIndexRoute = AccountIdLayoutIndexRouteImport.update({
   id: '/',
@@ -75,16 +67,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
-  '/$accountId': typeof AccountIdLayoutIndexRoute
   '/$accountId/categories': typeof AccountIdLayoutCategoriesRoute
   '/$accountId/settings': typeof AccountIdLayoutSettingsRoute
   '/$accountId/transactions': typeof AccountIdLayoutTransactionsRoute
+  '/$accountId': typeof AccountIdLayoutIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
-  '/$accountId': typeof AccountIdRouteWithChildren
   '/$accountId/_layout': typeof AccountIdLayoutRouteRouteWithChildren
   '/$accountId/_layout/categories': typeof AccountIdLayoutCategoriesRoute
   '/$accountId/_layout/settings': typeof AccountIdLayoutSettingsRoute
@@ -105,15 +96,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/settings'
-    | '/$accountId'
     | '/$accountId/categories'
     | '/$accountId/settings'
     | '/$accountId/transactions'
+    | '/$accountId'
   id:
     | '__root__'
     | '/'
     | '/settings'
-    | '/$accountId'
     | '/$accountId/_layout'
     | '/$accountId/_layout/categories'
     | '/$accountId/_layout/settings'
@@ -124,18 +114,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRoute: typeof SettingsRoute
-  AccountIdRoute: typeof AccountIdRouteWithChildren
+  AccountIdLayoutRouteRoute: typeof AccountIdLayoutRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/$accountId': {
-      id: '/$accountId'
-      path: '/$accountId'
-      fullPath: '/$accountId'
-      preLoaderRoute: typeof AccountIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -155,7 +138,7 @@ declare module '@tanstack/react-router' {
       path: '/$accountId'
       fullPath: '/$accountId'
       preLoaderRoute: typeof AccountIdLayoutRouteRouteImport
-      parentRoute: typeof AccountIdRoute
+      parentRoute: typeof rootRouteImport
     }
     '/$accountId/_layout/': {
       id: '/$accountId/_layout/'
@@ -205,22 +188,10 @@ const AccountIdLayoutRouteRouteChildren: AccountIdLayoutRouteRouteChildren = {
 const AccountIdLayoutRouteRouteWithChildren =
   AccountIdLayoutRouteRoute._addFileChildren(AccountIdLayoutRouteRouteChildren)
 
-interface AccountIdRouteChildren {
-  AccountIdLayoutRouteRoute: typeof AccountIdLayoutRouteRouteWithChildren
-}
-
-const AccountIdRouteChildren: AccountIdRouteChildren = {
-  AccountIdLayoutRouteRoute: AccountIdLayoutRouteRouteWithChildren,
-}
-
-const AccountIdRouteWithChildren = AccountIdRoute._addFileChildren(
-  AccountIdRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRoute: SettingsRoute,
-  AccountIdRoute: AccountIdRouteWithChildren,
+  AccountIdLayoutRouteRoute: AccountIdLayoutRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

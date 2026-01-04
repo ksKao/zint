@@ -62,10 +62,10 @@ export default function PieWidget({
       });
     },
   });
-
+  
   return (
     <div className="h-full max-h-full w-full max-w-full">
-      <ChartContainer
+      {data.length ? <ChartContainer
         config={
           data.reduce(
             (prev, curr) => {
@@ -91,11 +91,13 @@ export default function PieWidget({
           />
           <Pie data={data} dataKey="value" nameKey="key" />
           <ChartLegend
-            content={<ChartLegendContent nameKey="key" />}
+            content={<ChartLegendContent payload={null} nameKey="key" />}
             className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
           />
         </PieChart>
-      </ChartContainer>
+      </ChartContainer> : <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+          <span className="text-center">No data available</span>
+      </div>}
     </div>
   );
 }
