@@ -1,4 +1,5 @@
 import { useUpsertWidgetDialog } from "@/components/dialog-forms/upsert-widget-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,8 +13,15 @@ import { widgets } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { eq, InferSelectModel } from "drizzle-orm";
-import { Edit2Icon, EllipsisIcon, Loader2Icon, TrashIcon } from "lucide-react";
+import {
+  AlertCircleIcon,
+  Edit2Icon,
+  EllipsisIcon,
+  Loader2Icon,
+  TrashIcon,
+} from "lucide-react";
 import { Suspense, useMemo, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { useMeasure } from "react-use";
 import { toast } from "sonner";
 import CardWidget from "./card-widget";
@@ -121,7 +129,19 @@ export default function Widget({
       </DropdownMenu>
       <div className="border-b p-2 text-center">{widget.name}</div>
       <div className="grow">
-        <Suspense>{component}</Suspense>
+        <ErrorBoundary
+          fallbackRender={() => (
+            <div className="flex h-full w-full items-center justify-center">
+              <Alert className="w-fit" variant="destructive">
+                <AlertCircleIcon />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>Unable to render this widget. Please check your configuration.</AlertDescription>
+              </Alert>
+            </div>
+          )}
+        >
+          <Suspense>{component}</Suspense>
+        </ErrorBoundary>
       </div>
     </div>
   );

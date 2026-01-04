@@ -30,7 +30,7 @@ export default function LineWidget({
       return await getLineOrBarChartData(config);
     },
   });
-
+  
   return (
     <div className="h-full max-h-full w-full max-w-full p-4">
       <ChartContainer
