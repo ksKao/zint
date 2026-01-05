@@ -62,42 +62,46 @@ export default function PieWidget({
       });
     },
   });
-  
+
   return (
     <div className="h-full max-h-full w-full max-w-full">
-      {data.length ? <ChartContainer
-        config={
-          data.reduce(
-            (prev, curr) => {
-              prev.obj[curr.key] = {
-                label: curr.group,
-                color: `var(--chart-${(prev.index % 5) + 1})`,
-              };
-              return {
-                obj: prev.obj,
-                index: prev.index + 1,
-              };
-            },
-            { obj: {}, index: 1 } as { obj: ChartConfig; index: number },
-          ).obj
-        }
-        className="w-full"
-        style={{ height }}
-      >
-        <PieChart>
-          <ChartTooltip
-            cursor={false}
-            content={<ChartTooltipContent hideLabel />}
-          />
-          <Pie data={data} dataKey="value" nameKey="key" />
-          <ChartLegend
-            content={<ChartLegendContent payload={null} nameKey="key" />}
-            className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
-          />
-        </PieChart>
-      </ChartContainer> : <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+      {data.length ? (
+        <ChartContainer
+          config={
+            data.reduce(
+              (prev, curr) => {
+                prev.obj[curr.key] = {
+                  label: curr.group,
+                  color: `var(--chart-${(prev.index % 5) + 1})`,
+                };
+                return {
+                  obj: prev.obj,
+                  index: prev.index + 1,
+                };
+              },
+              { obj: {}, index: 1 } as { obj: ChartConfig; index: number },
+            ).obj
+          }
+          className="w-full"
+          style={{ height }}
+        >
+          <PieChart>
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent hideLabel />}
+            />
+            <Pie data={data} dataKey="value" nameKey="key" />
+            <ChartLegend
+              content={<ChartLegendContent nameKey="key" />}
+              className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
+            />
+          </PieChart>
+        </ChartContainer>
+      ) : (
+        <div className="text-muted-foreground flex h-full w-full items-center justify-center">
           <span className="text-center">No data available</span>
-      </div>}
+        </div>
+      )}
     </div>
   );
 }
