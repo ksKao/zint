@@ -1,4 +1,5 @@
 import UpsertAccountDialog from "@/components/dialog-forms/upsert-account-dialog";
+import ErrorPage from "@/components/error";
 import Navbar from "@/components/navbar";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { Toaster } from "sonner";
@@ -12,6 +13,11 @@ export const Route = createRootRoute({
         <Outlet />
       </main>
       <Toaster richColors position="top-center" />
+    </div>
+  ),
+  errorComponent: () => (
+    <div className="h-screen w-screen">
+      <ErrorPage />
     </div>
   ),
 });
