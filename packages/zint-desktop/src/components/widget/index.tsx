@@ -53,6 +53,7 @@ export default function Widget({
       toast.error("Failed to delete widget");
     },
   });
+
   const component = useMemo(() => {
     const heightWithoutHeader = height - 41;
 

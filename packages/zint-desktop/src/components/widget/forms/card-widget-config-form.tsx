@@ -78,7 +78,11 @@ export default function CardWidgetConfigForm() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Text</FormLabel>
-            <Input {...field} placeholder="Card Text" />
+            <Input
+              {...field}
+              value={field.value ?? ""}
+              placeholder="Card Text"
+            />
           </FormItem>
         )}
       />

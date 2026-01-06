@@ -30,32 +30,17 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { useMeasure } from "react-use";
 import { toast } from "sonner";
-import { create } from "zustand";
 
 export const Route = createFileRoute("/$accountId/_layout/")({
   component: Index,
 });
 
 export const MAX_COLS = 12;
-export const ROW_HEIGHT = 100;
-
-type LocalDashboardLayoutState = {
-  layout: Layout;
-  setLayout: (layout: Layout) => void;
-};
-
-export const useLocalDashboardLayout = create<LocalDashboardLayoutState>()(
-  (set) => ({
-    layout: [],
-    setLayout: (layout) => {
-      set({ layout });
-    },
-  }),
-);
+const ROW_HEIGHT = 100;
 
 function Index() {
   const [editMode, setEditMode] = useState(false);
-  const { layout, setLayout } = useLocalDashboardLayout();
+  const [layout, setLayout] = useState<Layout>([]);
 
   const { setOpen, setEditingWidget } = useUpsertWidgetDialog();
   const { accountId } = Route.useParams();
@@ -184,11 +169,17 @@ function Index() {
           }}
           onLayoutChange={setLayout}
         >
-          {widgets.map((widget) => (
-            <div key={widget.id}>
-              <Widget widget={widget} />
-            </div>
-          ))}
+          {layout.map((layoutItem) => {
+            const widget = widgets.find((w) => w.id === layoutItem.i);
+
+            if (!widget) return null;
+
+            return (
+              <div key={widget.id}>
+                <Widget widget={widget} />
+              </div>
+            );
+          })}
         </ReactGridLayout>
       ) : (
         <Empty className="h-full w-full">
