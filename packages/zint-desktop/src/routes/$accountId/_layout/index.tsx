@@ -14,6 +14,7 @@ import Widget from "@/components/widget";
 import { db } from "@/db";
 import { widgets as widgetTable } from "@/db/schema";
 import { queryKeys } from "@/lib/query-keys";
+import { storageKeys } from "@/lib/storage-keys";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
@@ -33,6 +34,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/$accountId/_layout/")({
   component: Index,
+  beforeLoad: ({ params }) => {
+    window.localStorage.setItem(storageKeys.accountId, params.accountId);
+  },
 });
 
 export const MAX_COLS = 12;
