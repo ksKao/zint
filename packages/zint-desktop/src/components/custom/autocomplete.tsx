@@ -11,7 +11,7 @@ import { Command as CommandPrimitive } from "cmdk";
 import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 
 type AutoCompleteProps = {
-  options: string[];
+  options: { value: string; subtext: string }[];
   value: string;
   onChange: (value: string) => void;
   emptyMessage?: string;
@@ -47,10 +47,12 @@ export const AutoComplete = ({
 
       // This is not a default behaviour of the <input /> field
       if (event.key === "Enter" && input.value !== "") {
-        const optionToSelect = options.find((option) => option === input.value);
+        const optionToSelect = options.find(
+          (option) => option.value === input.value,
+        );
 
         if (optionToSelect) {
-          onChange(optionToSelect);
+          onChange(optionToSelect.value);
         }
       }
 
@@ -115,16 +117,21 @@ export const AutoComplete = ({
                 <CommandGroup>
                   {options.map((option) => (
                     <CommandItem
-                      key={option}
-                      value={option}
+                      key={option.value}
+                      value={option.value}
                       onMouseDown={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
                       }}
-                      onSelect={() => handleSelectOption(option)}
-                      className={cn("flex w-full items-center gap-2")}
+                      onSelect={() => handleSelectOption(option.value)}
+                      className={cn(
+                        "flex w-full items-center justify-between gap-2",
+                      )}
                     >
-                      {option}
+                      <span className="truncate">{option.value}</span>
+                      <span className="text-muted-foreground min-w-fit text-right text-sm">
+                        {option.subtext}
+                      </span>
                     </CommandItem>
                   ))}
                 </CommandGroup>

@@ -33,6 +33,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { getDateAtMidnight, recomputeBalanceAndOrder } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { eq, gt, like, sql } from "drizzle-orm";
 import lavenshtein from "fast-levenshtein";
 import { Info } from "lucide-react";
@@ -84,14 +85,16 @@ function TitleAutoComplete({
 
       return (
         await db
-          .selectDistinct({
+          .select({
             title: transactions.title,
+            date: transactions.date,
           })
           .from(transactions)
           .where(like(transactions.title, `%${value}%`))
+          .groupBy(transactions.title)
       )
-        .map((t) => t.title)
-        .sort((a, b) => lavenshtein.get(a, b));
+        .map((t) => ({ value: t.title, subtext: format(t.date, "dd MMM") }))
+        .sort((a, b) => lavenshtein.get(a.value, b.value));
     },
   });
 
@@ -230,7 +233,6 @@ export default function UpsertTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Title</FormLabel>
-                  {/* <Input {...field} placeholder="Title" /> */}
                   <FormControl>
                     <TitleAutoComplete
                       value={field.value}
