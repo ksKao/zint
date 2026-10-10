@@ -60,22 +60,40 @@ export default function Widget({
     switch (widget.config.type) {
       case "Bar Chart":
         return (
-          <BarWidget config={widget.config} height={heightWithoutHeader} />
+          <BarWidget
+            config={widget.config}
+            height={heightWithoutHeader}
+            accountId={widget.accountId}
+          />
         );
       case "Line Chart":
         return (
-          <LineWidget config={widget.config} height={heightWithoutHeader} />
+          <LineWidget
+            config={widget.config}
+            height={heightWithoutHeader}
+            accountId={widget.accountId}
+          />
         );
       case "Pie Chart":
         return (
-          <PieWidget config={widget.config} height={heightWithoutHeader} />
+          <PieWidget
+            config={widget.config}
+            height={heightWithoutHeader}
+            accountId={widget.accountId}
+          />
         );
       case "Table":
         return (
-          <TableWidget config={widget.config} height={heightWithoutHeader} />
+          <TableWidget
+            config={widget.config}
+            height={heightWithoutHeader}
+            accountId={widget.accountId}
+          />
         );
       case "Card":
-        return <CardWidget config={widget.config} />;
+        return (
+          <CardWidget config={widget.config} accountId={widget.accountId} />
+        );
       default:
         return null;
     }

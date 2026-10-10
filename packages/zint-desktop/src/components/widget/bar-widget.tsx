@@ -13,14 +13,16 @@ import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 export default function BarWidget({
   config,
   height,
+  accountId,
 }: {
   config: BarChartConfig;
   height: number;
+  accountId: string;
 }) {
   const { data } = useSuspenseQuery({
-    queryKey: [queryKeys.transaction, config],
+    queryKey: [queryKeys.transaction, config, accountId],
     queryFn: async () => {
-      return await getLineOrBarChartData(config);
+      return await getLineOrBarChartData(config, accountId);
     },
   });
 

@@ -7,9 +7,15 @@ import { CardWidgetConfig } from "@/lib/types/widget.type";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Icon, IconName } from "../ui/icon-picker";
 
-export default function CardWidget({ config }: { config: CardWidgetConfig }) {
+export default function CardWidget({
+  config,
+  accountId,
+}: {
+  config: CardWidgetConfig;
+  accountId: string;
+}) {
   const { data } = useSuspenseQuery({
-    queryKey: [queryKeys.transaction, config],
+    queryKey: [queryKeys.transaction, config, accountId],
     queryFn: async () => {
       let select: Parameters<typeof getSelectTransactionQuery>[0]["select"] = {
         value: getTableWidgetSelectColumn(
@@ -29,6 +35,7 @@ export default function CardWidget({ config }: { config: CardWidgetConfig }) {
       }
 
       let query = getSelectTransactionQuery({
+        accountId,
         select,
         filters: config.filters,
         orderBy: config.sortByColumns.map((x) => ({

@@ -20,17 +20,19 @@ import {
 export default function LineWidget({
   config,
   height,
+  accountId,
 }: {
   config: LineChartConfig;
   height: number;
+  accountId: string;
 }) {
   const { data } = useSuspenseQuery({
-    queryKey: [queryKeys.transaction, config],
+    queryKey: [queryKeys.transaction, config, accountId],
     queryFn: async () => {
-      return await getLineOrBarChartData(config);
+      return await getLineOrBarChartData(config, accountId);
     },
   });
-  
+
   return (
     <div className="h-full max-h-full w-full max-w-full p-4">
       <ChartContainer

@@ -37,10 +37,12 @@ export const selectMonthSql = sql`strftime('%Y-%m', ${transactions.date}, 'unixe
 export const selectYearSql = sql`strftime('%Y', ${transactions.date}, 'unixepoch', 'localtime')`;
 
 export function getSelectTransactionQuery({
+  accountId,
   select,
   filters,
   orderBy,
 }: {
+  accountId: string;
   select: Parameters<typeof db.select>[0];
   filters: WidgetConfig["filters"];
   orderBy: {
@@ -55,7 +57,7 @@ export function getSelectTransactionQuery({
     .leftJoin(subCategories, eq(subCategories.id, transactions.subCategoryId))
     .$dynamic();
 
-  query = handleFilters(query, filters);
+  query = handleFilters(query, filters, accountId);
 
   for (const element of orderBy) {
     query = query.orderBy(
@@ -179,6 +181,7 @@ function getOperatorFunction(
 export function handleFilters<T extends SQLiteSelect>(
   qb: T,
   filters: WidgetConfig["filters"],
+  accountId: string,
 ): T {
   const conditions: SQL<unknown>[] = [];
   for (const filter of filters) {
@@ -255,7 +258,13 @@ export function handleFilters<T extends SQLiteSelect>(
     conditions.push(operatorFunction);
   }
 
-  qb = qb.where(and(...conditions, eq(transactions.isTemporary, false)));
+  qb = qb.where(
+    and(
+      ...conditions,
+      eq(transactions.isTemporary, false),
+      eq(transactions.accountId, accountId),
+    ),
+  );
 
   return qb;
 }

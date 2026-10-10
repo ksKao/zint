@@ -14,11 +14,13 @@ import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 
 export async function getLineOrBarChartData(
   config: BarChartConfig | LineChartConfig,
+  accountId: string,
 ) {
   const xAxisSelectColumn = getTransactionXAxisSelectColumn(config.xAxis);
   const groupBySelect = getTransactionGroupBySelect(config.groupBy?.field);
 
   let query = getSelectTransactionQuery({
+    accountId,
     select: {
       x: sql`ifnull(${xAxisSelectColumn}, 'N/A')`,
       y: getTransactionAggregationOptionSelect(

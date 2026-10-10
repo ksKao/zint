@@ -180,7 +180,7 @@ export default function TransactionsTable({
         },
       },
       {
-        id: "payee",
+        accessorKey: "payee",
         header: "Payee",
         cell: (info) => info.getValue() || "--",
       },

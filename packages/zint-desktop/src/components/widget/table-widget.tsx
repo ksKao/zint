@@ -19,12 +19,14 @@ import { format } from "date-fns";
 export default function TableWidget({
   config,
   height,
+  accountId,
 }: {
   config: TableWidgetConfig;
   height: number;
+  accountId: string;
 }) {
   const { data } = useSuspenseQuery({
-    queryKey: [queryKeys.transaction, config],
+    queryKey: [queryKeys.transaction, config, accountId],
     queryFn: async () => {
       let select: Parameters<typeof getSelectTransactionQuery>[0]["select"] =
         {};
@@ -43,6 +45,7 @@ export default function TableWidget({
       }
 
       let query = getSelectTransactionQuery({
+        accountId,
         filters: config.filters,
         select,
         orderBy: config.sortByColumns.map((x) => ({

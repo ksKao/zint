@@ -19,20 +19,23 @@ import { sql } from "drizzle-orm";
 import { Pie, PieChart } from "recharts";
 
 export default function PieWidget({
+  accountId,
   config,
   height,
 }: {
+  accountId: string;
   config: PieChartConfig;
   height: number;
 }) {
   const { data } = useSuspenseQuery({
-    queryKey: [queryKeys.transaction, config],
+    queryKey: [queryKeys.transaction, config, accountId],
     queryFn: async () => {
       const groupSelectColumn = getTransactionXAxisSelectColumn(
         config.groupByField,
       );
 
       let query = getSelectTransactionQuery({
+        accountId,
         select: {
           group: sql`ifnull(${groupSelectColumn}, 'N/A')`,
           value: getTransactionAggregationOptionSelect(

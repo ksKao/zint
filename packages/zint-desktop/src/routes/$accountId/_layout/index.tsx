@@ -46,9 +46,11 @@ function Index() {
   const { accountId } = Route.useParams();
   const [ref, { width }] = useMeasure<HTMLDivElement>();
   const { data: widgets } = useSuspenseQuery({
-    queryKey: [queryKeys.widget],
+    queryKey: [queryKeys.widget, accountId],
     queryFn: async () => {
-      return await db.query.widgets.findMany();
+      return await db.query.widgets.findMany({
+        where: (widgets, { eq }) => eq(widgets.accountId, accountId),
+      });
     },
   });
 
