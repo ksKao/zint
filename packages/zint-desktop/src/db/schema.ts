@@ -62,7 +62,7 @@ export const transactions = sqliteTable(
       .references(() => accounts.id, { onDelete: "cascade" })
       .notNull(),
   },
-  (t) => [unique().on(t.date, t.order)],
+  (t) => [unique().on(t.accountId, t.date, t.order)],
 );
 
 export const widgets = sqliteTable("widgets", {

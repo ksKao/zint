@@ -117,6 +117,7 @@ function RouteComponent() {
   } = useQuery({
     queryKey: [queryKeys.account, accountId],
     queryFn: async () => {
+      // An error occurred while trying to recompute balance.Failed query: update "transactions" set "balance" = ?, "order" = ? where "transactions"."id" = ? params: 7086.269999999817,0,xt59pek40ztkk0zh0bzcr6wt
       return await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
       });
@@ -131,8 +132,10 @@ function RouteComponent() {
         toast.success("Balance has been recomputed.");
         queryClient.invalidateQueries();
       },
-      onError: () => {
-        toast.error("An error occurred while trying to recompute balance.");
+      onError: (e) => {
+        toast.error(
+          "An error occurred while trying to recompute balance." + e.message,
+        );
       },
     });
 

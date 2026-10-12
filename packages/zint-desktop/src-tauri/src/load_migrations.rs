@@ -9,6 +9,12 @@ pub fn load_migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0000_lame_paladin.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 2,
+            description: "scope transaction order uniqueness to account",
+            sql: include_str!("../migrations/0001_volatile_giant_girl.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     return migrations;

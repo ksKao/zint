@@ -130,7 +130,8 @@ export default function UpsertTransactionDialog({
           await recomputeBalanceAndOrder(accountId);
       } else {
         const latestTransaction = await db.query.transactions.findFirst({
-          where: (t, { lte }) => lte(t.date, formData.date),
+          where: (t, { and, eq, lte }) =>
+            and(lte(t.date, formData.date), eq(t.accountId, accountId)),
           orderBy: (t, { desc }) => [desc(t.date), desc(t.order)],
         });
 
